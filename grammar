@@ -1,0 +1,13 @@
+ 
+program -> ...
+
+expr -> ...
+
+stmt -> id = expr
+      | if ( expr ) stmt
+      | if ( expt ) stmt else stmt
+      | while ( expr ) stmt
+      | { stmts }
+
+stmts -> stmts stmt
+       | e

@@ -1,0 +1,159 @@
+
+ast.h,1308
+#define _AST_H2,15
+typedef struct exp_tag 4,31
+    enum { int_exp,5,56
+    enum { int_exp, floating_exp,5,56
+    enum { int_exp, floating_exp, variable_exp,5,56
+           binary_op,6,104
+           binary_op, unary_op,6,104
+           binary_op, unary_op, function_call}function_call6,104
+           binary_op, unary_op, function_call}       tag;6,104
+    union { int                                      integer;7,162
+            float                                    floating;8,224
+            string                                   variable;9,287
+            struct { string           oper;10,350
+                     struct exp_tag*  left;11,394
+                     struct exp_tag*  right;12,438
+                     struct exp_tag*  right; }       binary;12,438
+            struct { string           oper;13,499
+                     struct exp_tag*  uexp;14,543
+                     struct exp_tag*  uexp; }        unary;14,543
+            struct { string           name;15,603
+                     struct exp_list* arguments;16,647
+                     struct exp_list* arguments; }   call;16,647
+        } op;17,706
+} exp;18,720
+typedef struct exp_list 20,728
+  exp*             elem;21,754
+  struct exp_list* next;22,779
+} exp_list;23,804
+exp* new_int_exp(25,817
+
+lexer.c,153
+vector lexer(4,74
+void reserve_keywords(53,1506
+int scan_number(68,1962
+int scan_word(95,2703
+int scan_operator(124,3486
+int scan_comment(207,5867
+
+lexer.h,158
+#define _LEXER_H2,17
+#define MAX_NUMBER_LENGTH 14,210
+#define MAX_ID_LENGTH 15,239
+static char* KEYWORDS[KEYWORDS17,266
+static char* TYPES[TYPES18,376
+
+main.c,93
+void print_char_array(12,162
+char* readfile(22,396
+void compile(53,1204
+int main(65,1554
+
+map.c,90
+map map_new(4,40
+void map_delete(14,261
+void map_insert(26,531
+token* map_find(42,966
+
+map.h,222
+#define _MAP_H2,15
+typedef struct pair 10,111
+    char* key;11,133
+    token* value;12,148
+} pair;13,166
+typedef struct map 15,175
+    int size;16,196
+    int allocated;17,210
+    pair* pairs;18,229
+} map;19,246
+
+parser.c,103
+int Parser::parse(3,21
+string Parser::expr(7,60
+void Parser::term(24,513
+void Parser::match(32,680
+
+parser.h,23
+#define _PARSER_H2,18
+
+s_table.c,111
+s_table s_table_new(3,22
+void s_table_delete(13,269
+void s_table_insert(21,441
+symbol* s_table_find(34,829
+
+s_table.h,299
+#define _S_TABLE_H2,19
+typedef struct s_pair 10,120
+    char *key;key11,144
+    symbol *value;value12,159
+} s_pair;13,178
+typedef struct s_table 15,189
+    struct s_table *parent;parent16,214
+    int size;17,242
+    int allocated;18,256
+    s_pair *pairs;pairs19,275
+} s_table;20,294
+
+symbol.c,80
+symbol* symbol_new(3,21
+void symbol_delete(11,219
+symbol* symbol_copy(16,286
+
+symbol.h,89
+#define _SYMBOL_H2,18
+typedef struct symbol 7,78
+    char* data;8,102
+} symbol;9,118
+
+token.c,104
+token* token_new(3,20
+void token_delete(12,245
+token* token_copy(17,310
+char* token_type_str(26,544
+
+token.h,753
+#define _TOKEN_H2,17
+enum token_type_enum 8,102
+enum token_type_enum {keyword,keyword8,102
+enum token_type_enum {keyword, type,8,102
+enum token_type_enum {keyword, type, int_num,8,102
+enum token_type_enum {keyword, type, int_num, float_num,8,102
+enum token_type_enum {keyword, type, int_num, float_num, identifier,8,102
+enum token_type_enum {keyword, type, int_num, float_num, identifier, operator,8,102
+                      logic_operator,9,181
+                      logic_operator, cmp_operator,9,181
+                      logic_operator, cmp_operator, assign_operator}assign_operator9,181
+typedef enum token_type_enum token_type;10,251
+typedef struct token 12,293
+    token_type id;13,316
+    char *data;data14,335
+} token;15,351
+
+utils.c,17
+void error(3,20
+
+utils.h,186
+#define _UTILS_H2,17
+#define START_STRUCTURES_SIZE 7,75
+#define MAX_FILE_LEN 8,108
+#define MAX_FILE_NAME_LENGTH 9,136
+char current_file[current_file11,170
+int current_line;12,211
+
+vector.c,134
+vector vector_new(3,21
+void vector_delete(12,236
+void vector_insert(19,374
+token* vector_get(27,621
+void print_token_vect(31,697
+
+vector.h,155
+#define _VECTOR_H2,18
+typedef struct vector 11,136
+    int size;12,160
+    int allocated;13,174
+    token **elements;elements14,193
+} vector;15,215
