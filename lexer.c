@@ -68,7 +68,8 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
 
         /* print tokens as they are parsed */
         if (tokens->size > num_tokens) {
-            token_print(tokens->elements[tokens->size-1]);
+            token* t = (token*)tokens->elements[tokens->size-1];
+            token_print(t);
             ++num_tokens;
         }
     }
@@ -114,7 +115,7 @@ char* scan_number(char *forward, buffered_reader *file_reader, vector *tokens) {
     buf[size] = '\0';
     token_type token_t = int_num;
     if (has_dot) token_t = float_num;
-    vector_insert(tokens, token_new(token_t, buf));
+    vector_push(tokens, token_new(token_t, buf));
     return --forward;
 }
 
@@ -141,12 +142,11 @@ char* scan_word(char *forward, buffered_reader *file_reader, vector *tokens, map
     /* if word that was read is reserved */
     if (word != NULL) {
         /* add it to tokens */
-        vector_insert(tokens, word);
+        vector_push(tokens, word);
     } else {
         /* save it as identifier and add it to tokens */
-        token *t = token_new(identifier, buf);
-        map_insert(words, buf, token_copy(t));
-        vector_insert(tokens, t);
+        map_insert(words, buf, token_new(identifier, buf));
+        vector_push(tokens, token_new(identifier, buf));
     }
     return --forward;
 }
@@ -161,14 +161,14 @@ char* scan_literal(char *forward, buffered_reader *file_reader, vector *tokens) 
     do {
         buf[size++] = *forward;
         forward = br_get_next_char(file_reader, forward);
-        if (*forward == UNIX_EOF)
+        if (*forward == UNIX_EOF || *forward == '\n')
             error("Missing terminating \" character", "");
         if (size >= MAX_LITERAL_LENGTH)
             error("Too large literal", "");
     } while ( *forward != '"' );
     buf[size++] = *forward;
     buf[size] = '\0';
-    vector_insert(tokens, token_new(literal, buf));
+    vector_push(tokens, token_new(literal, buf));
     return forward;
 }
 
@@ -256,7 +256,7 @@ char* scan_operator(char *forward, char prev, buffered_reader *file_reader, vect
         default:
             break;
     }
-    vector_insert(tokens, token_new(token_t, buf));
+    vector_push(tokens, token_new(token_t, buf));
     if (buf[1] == '\0')
         return --forward;
     else

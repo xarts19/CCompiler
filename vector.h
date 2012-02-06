@@ -1,3 +1,9 @@
+/*
+ * My simple dynamic vector implementation.
+ * Can be used as stack.
+ * Uses cumulative reallocation which increases size by factor of 2 each time.
+ */
+
 #ifndef VECTOR_H_
 #define VECTOR_H_
 
@@ -7,19 +13,44 @@
 
 #include "utils.h"
 #include "token.h"
+#include "assert.h"
+//#define NDEBUG
 
 typedef struct vector {
     int size;
     int allocated;
-    token **elements;
+    void** elements;
 } vector;
 
-vector vector_new(unsigned int initial_size);
-void vector_delete(vector *m, void (*delete)(void*));
+/*                                  */
+/* Creating and destroying vectors. */
+/*                                  */
 
-void vector_insert(vector *m, token *value);
-token* vector_get(vector *m, int index);
+vector* vector_new(unsigned int initial_size);
 
-void print_token_vect(const char *title, vector tokens);
+/* Calls 'delete' for each element of vector before self-destruction
+ */
+void vector_delete(vector* v, void (*delete)(void*));
+
+
+/*                          */
+/* Usual vector operations. */
+/*                          */
+
+void* vector_get(vector* v, int index);
+
+/* Be sure to properly delete element in the position you are inserting to.
+ * Returns previous element from this cell.
+ / Can't be used to increase vector size.
+ */
+void* vector_insert(vector* v, void* value, int index);
+
+
+/*                          */
+/* Stack operations.        */
+/*                          */
+
+void vector_push(vector* v, void* value);
+void* vector_pop(vector* v);
 
 #endif

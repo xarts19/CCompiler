@@ -16,10 +16,10 @@ typedef struct token {
     char *data;
 } token;
 
-token* token_new(token_type id, const char *data);
-void token_delete(token *t);
-token* token_copy(const token *t);
+token* token_new(token_type id, const char* data);
+void token_delete(token* t);
+token* token_copy(const token* t);
 char* token_type_str(token_type id);
-void token_print(token *t);
+void token_print(token* t);
 
 #endif

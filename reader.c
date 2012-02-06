@@ -18,6 +18,8 @@ buffered_reader* br_open_file(char *filename) {
 char* br_get_start(buffered_reader *br) {
     br->active = e_buffer1;
     br_read_buffer(br, br->buffer1);
+    br->base_pointer = br->buffer1;
+    br->forward_pointer = br->base_pointer;
     return br->buffer1;
 }
 

@@ -9,18 +9,13 @@ token* token_new(token_type id, const char* data) {
     return t;
 }
 
-void token_delete(token *t) {
+void token_delete(token* t) {
     free(t->data);
     free(t);
 }
 
-token* token_copy(const token *t) {
+token* token_copy(const token* t) {
     return token_new(t->id, t->data);
-}
-
-void token_print(token *t) {
-    printf("[%s: '%s' ] ", token_type_str(t->id), t->data);
-
 }
 
 char* token_type_str(token_type id) {
@@ -49,5 +44,10 @@ char* token_type_str(token_type id) {
             return "undefined operator type";
     }
     return NULL;
+}
+
+void token_print(token* t) {
+    printf("[%s: '%s' ] ", token_type_str(t->id), t->data);
+
 }
 

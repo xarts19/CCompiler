@@ -14,6 +14,8 @@ typedef struct buffered_reader {
     char *buffer;      /* circular input buffer */
     char *buffer1;     /* pointer to first half of the buffer */
     char *buffer2;     /* pointer to second half of the buffer */
+    char *base_pointer;
+    char *forward_pointer;
     int buffer_size;
 } buffered_reader;
 

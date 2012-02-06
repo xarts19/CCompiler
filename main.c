@@ -23,15 +23,15 @@ void compile(char *input_file_name) {
     buffered_reader *file_reader = br_open_file(input_file_name);
 
     /* lexical tokens */
-    vector tokens = vector_new(START_STRUCTURES_SIZE);
+    vector* tokens = vector_new(START_STRUCTURES_SIZE);
     map* words = map_new(START_STRUCTURES_SIZE);
     printf(">>> Tokens ===========================\n");
-    lexer(file_reader, &tokens, words);
+    lexer(file_reader, tokens, words);
     printf("\n");
     //print_token_vect("Tokens:", tokens);
 
-    vector_delete(&tokens, hlp_delete_token);
-    //map_delete(words, hlp_delete_token);
+    vector_delete(tokens, hlp_delete_token);
+    map_delete(words, hlp_delete_token);
     //br_close_file(file_reader);
 }
 
