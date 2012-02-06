@@ -16,6 +16,7 @@
 #define MAX_NUMBER_LENGTH 100
 #define MAX_ID_LENGTH 100
 #define MAX_LITERAL_LENGTH 255
+#define OPERATOR_LENGTH 3
 
 void lexer(buffered_reader *file_reader, vector* tokens, map* words);
 void reserve_keywords(map *words);

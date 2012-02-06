@@ -46,6 +46,12 @@ char* token_type_str(token_type id) {
             return "cmp_op";
         case assign_operator:
             return "assign_op";
+        case bitwise_operator:
+            return "bitwise";
+        case pointer_operator:
+            return "pointer";
+        case preproc_operator:
+            return "preproc";
         case comment:
             return "comment";
         default:

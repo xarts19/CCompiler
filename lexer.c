@@ -41,25 +41,22 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
             case '/':
                 /* comment or operator */
                 cur_token = scan_comment(file_reader);
-                if (cur_token == NULL) {}
+                if (cur_token == NULL)
                     cur_token = scan_operator(file_reader);
                 assert(cur_token != NULL);
                 vector_push(tokens, cur_token);
                 break;
 
             case '"':
-            case '<':
             case '\'':
                 /* literal (const string) */
                 cur_token = scan_literal(file_reader);
-                if (cur_token == NULL) {}
-                    cur_token = scan_operator(file_reader);
                 assert(cur_token != NULL);
                 vector_push(tokens, cur_token);
                 break;
 
             default:
-                if ( isdigit(*forward) || *forward == '.' ) {
+                if ( isdigit(*forward) ) {
                     /* if it's a number (int or float) */
                     cur_token = scan_number(file_reader);
                     assert(cur_token != NULL);
@@ -123,7 +120,7 @@ void reserve_keywords(map *words) {
  * Return pointer to the last symbol of the number.
  */
 token* scan_number(buffered_reader *file_reader) {
-    char buf[MAX_NUMBER_LENGTH];
+    char buf[MAX_NUMBER_LENGTH+1];
     int size = 0;
     int state = 0;
     char* forward = br_get_base(file_reader);
@@ -131,7 +128,6 @@ token* scan_number(buffered_reader *file_reader) {
         switch (state) {
             case 0:
                 if ( isdigit(*forward) ) state = 1;
-                else if (*forward == '.') state = 2;
                 else return NULL;
                 buf[size++] = *forward;
                 break;
@@ -212,7 +208,7 @@ token* scan_number(buffered_reader *file_reader) {
  * Return pointer to the last symbol of the word.
  */
 token* scan_word(buffered_reader *file_reader) {
-    char buf[MAX_ID_LENGTH];
+    char buf[MAX_ID_LENGTH+1];
     int size = 0;
     int state = 0;
     char* forward = br_get_base(file_reader);
@@ -247,7 +243,7 @@ token* scan_word(buffered_reader *file_reader) {
  * Return pointer to the last symbol of the literal.
  */
 token* scan_literal(buffered_reader *file_reader) {
-    char buf[MAX_LITERAL_LENGTH];
+    char buf[MAX_LITERAL_LENGTH+1];
     int size = 0;
     int state = 0;
     char* forward = br_get_base(file_reader);
@@ -256,7 +252,7 @@ token* scan_literal(buffered_reader *file_reader) {
             case 0:
                 if (*forward == '\'') state = 1;
                 else if (*forward == '"') state = 5;
-                else if (*forward == '<') state = 8;
+                //else if (*forward == '<') state = 8;
                 else return NULL;
                 buf[size++] = *forward;
                 break;
@@ -305,7 +301,8 @@ token* scan_literal(buffered_reader *file_reader) {
                 return token_new(literal, buf);
 
             /* angle-quote literal (string) */
-            case 8:
+            /*
+              case 8:
                 forward = br_get_next_char(file_reader);
                 if (*forward == '\\') state = 9;
                 else if (*forward == '>') state = 10;
@@ -321,6 +318,7 @@ token* scan_literal(buffered_reader *file_reader) {
                 br_get_next_char(file_reader);
                 br_set_base(file_reader);
                 return token_new(literal, buf);
+            */
         }
         if (*forward == UNIX_EOF)
             return error("EOF while scanning comment", "");
@@ -337,96 +335,309 @@ token* scan_literal(buffered_reader *file_reader) {
     return NULL;
 }
 
-/* /\* */
-/*  * Scan for various operators. */
-/*  * Return pointer to the last symbol of the operator. */
-/*  *\/ */
-/* token* scan_operator(char prev, buffered_reader *file_reader) { */
-/*     char buf[3]; */
-/*     token_type token_t = operator; */
-/*     if (prev == '\0') { */
-/*         buf[0] = *forward; */
-/*         forward = br_get_next_char(file_reader); */
-/*     } else */
-/*         buf[0] = prev; */
-/*     buf[1] = '\0'; */
-/*     buf[2] = '\0'; */
-/*     switch (buf[0]) { */
-/*         case '<': */
-/*             switch (*forward) { */
-/*                 case '>': */
-/*                     /\* not equals *\/ */
-/*                     buf[0] = '!'; */
-/*                     buf[1] = '='; */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*                 case '=': */
-/*                     /\* less then or equal to *\/ */
-/*                     buf[1] = '='; */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*                 case '<': */
-/*                     /\* shift left *\/ */
-/*                     buf[1] = '<'; */
-/*                     break; */
-/*                 default: */
-/*                     /\* less then *\/ */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*             } */
-/*             break; */
-/*         case '>': */
-/*             switch (*forward) { */
-/*                 case '=': */
-/*                     /\* greater then or equal to *\/ */
-/*                     buf[1] = '='; */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*                 case '>': */
-/*                     /\* shift right *\/ */
-/*                     buf[1] = '>'; */
-/*                     break; */
-/*                 default: */
-/*                     /\* greater then *\/ */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*             } */
-/*             break; */
-/*         case '!': */
-/*             switch (*forward) { */
-/*                 case '=': */
-/*                     /\* not equals *\/ */
-/*                     buf[1] = '='; */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*                 default: */
-/*                     /\* not *\/ */
-/*                     token_t = logic_operator; */
-/*                     break; */
-/*             } */
-/*             break; */
-/*         case '=': */
-/*             switch (*forward) { */
-/*                 case '=': */
-/*                     /\* equals *\/ */
-/*                     buf[1] = '='; */
-/*                     token_t = cmp_operator; */
-/*                     break; */
-/*                 default: */
-/*                     /\* assignment *\/ */
-/*                     token_t = assign_operator; */
-/*                     break; */
-/*             } */
-/*             break; */
-/*         default: */
-/*             break; */
-/*     } */
-/*     vector_push(tokens, token_new(token_t, buf)); */
-/*     if (buf[1] == '\0') */
-/*         return --forward; */
-/*     else */
-/*         return forward; */
-/* } */
+/*
+ * Scan for various operators.
+ * Return pointer to the last symbol of the operator.
+ */
+token* scan_operator(buffered_reader *file_reader) {
+    char buf[OPERATOR_LENGTH+1];
+    token_type token_t = operator;
+    char* forward = br_get_base(file_reader);
+
+    switch (*forward) {
+        case '+':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '+':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o++");
+                    break;
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o+=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op+");
+                    token_t = operator;
+                    break;
+            }
+            break;
+        case '-':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '-':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o--");
+                    break;
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o-=");
+                    token_t = assign_operator;
+                    break;
+                case '>':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o->");
+                    token_t = pointer_operator;
+                    break;
+                default:
+                    strcpy(buf, "op-");
+                    token_t = operator;
+                    break;
+            }
+            break;
+        case '*':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o*=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op*");
+                    token_t = operator;
+                    break;
+            }
+            break;
+        case '/':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o/=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op/");
+                    token_t = operator;
+                    break;
+            }
+            break;
+        case '%':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o%=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op%");
+                    token_t = operator;
+                    break;
+            }
+            break;
+        case '=':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o==");
+                    token_t = cmp_operator;
+                    break;
+                default:
+                    strcpy(buf, "op=");
+                    token_t = assign_operator;
+                    break;
+            }
+            break;
+        case '!':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o!=");
+                    token_t = cmp_operator;
+                    break;
+                default:
+                    strcpy(buf, "op!");
+                    token_t = logic_operator;
+                    break;
+            }
+            break;
+        case '>':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o>=");
+                    token_t = cmp_operator;
+                    break;
+                case '>':
+                    forward = br_get_next_char(file_reader);
+                    switch (*forward) {
+                        case '=':
+                            br_get_next_char(file_reader);
+                            strcpy(buf, ">>=");
+                            token_t = assign_operator;
+                            break;
+                        default:
+                            strcpy(buf, "o>>");
+                            token_t = bitwise_operator;
+                            break;
+                    }
+                    break;
+                default:
+                    strcpy(buf, "op>");
+                    token_t = cmp_operator;
+                    break;
+            }
+            break;
+        case '<':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o<=");
+                    token_t = cmp_operator;
+                    break;
+                case '<':
+                    forward = br_get_next_char(file_reader);
+                    switch (*forward) {
+                        case '=':
+                            br_get_next_char(file_reader);
+                            strcpy(buf, "<<=");
+                            token_t = assign_operator;
+                            break;
+                        default:
+                            strcpy(buf, "o<<");
+                            token_t = bitwise_operator;
+                            break;
+                    }
+                    break;
+                default:
+                    strcpy(buf, "op<");
+                    token_t = cmp_operator;
+                    break;
+            }
+            break;
+        case '&':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '&':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o&&");
+                    token_t = logic_operator;
+                    break;
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o&=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op&");
+                    token_t = bitwise_operator;
+                    break;
+            }
+            break;
+        case '|':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '|':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o||");
+                    token_t = logic_operator;
+                    break;
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o|=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op|");
+                    token_t = bitwise_operator;
+                    break;
+            }
+            break;
+        case '^':
+            forward = br_get_next_char(file_reader);
+            switch (*forward) {
+                case '=':
+                    br_get_next_char(file_reader);
+                    strcpy(buf, "o^=");
+                    token_t = assign_operator;
+                    break;
+                default:
+                    strcpy(buf, "op^");
+                    token_t = bitwise_operator;
+                    break;
+            }
+            break;
+        case '~':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op~");
+            token_t = bitwise_operator;
+            break;
+        case '.':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op.");
+            token_t = pointer_operator;
+            break;
+        case ',':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op,");
+            token_t = pointer_operator;
+            break;
+        case '[':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op[");
+            token_t = pointer_operator;
+            break;
+        case ']':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op]");
+            token_t = pointer_operator;
+            break;
+        case ';':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op;");
+            token_t = operator;
+            break;
+        case ':':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op;");
+            token_t = operator;
+            break;
+        case '?':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op;");
+            token_t = operator;
+            break;
+        case '(':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op(");
+            token_t = operator;
+            break;
+        case ')':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op)");
+            token_t = operator;
+            break;
+        case '{':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op{");
+            token_t = operator;
+            break;
+        case '}':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op}");
+            token_t = operator;
+            break;
+        case '#':
+            br_get_next_char(file_reader);
+            strcpy(buf, "op#");
+            token_t = preproc_operator;
+            break;
+        default:
+            buf[0] = *forward;
+            buf[1] = '\0';
+            return error("Unknows operator: ", buf);
+            break;
+    }
+    br_set_base(file_reader);
+    return token_new(token_t, buf);
+}
 
 
 /* returns pointer to the comment token */
