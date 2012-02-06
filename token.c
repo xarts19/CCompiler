@@ -1,5 +1,7 @@
 #include "token.h"
 
+#include "assert.h"
+
 token* token_new(token_type id, const char* data) {
     token* t = (token*)safe_malloc(sizeof(token));
     t->id = id;
@@ -10,11 +12,13 @@ token* token_new(token_type id, const char* data) {
 }
 
 void token_delete(token* t) {
+    assert(t != NULL);
     free(t->data);
     free(t);
 }
 
 token* token_copy(const token* t) {
+    assert(t != NULL);
     return token_new(t->id, t->data);
 }
 
@@ -28,6 +32,8 @@ char* token_type_str(token_type id) {
             return "int";
         case float_num:
             return "float";
+        case exp_num:
+            return "exp";
         case literal:
             return "literal";
         case identifier:
@@ -40,6 +46,8 @@ char* token_type_str(token_type id) {
             return "cmp_op";
         case assign_operator:
             return "assign_op";
+        case comment:
+            return "comment";
         default:
             return "undefined operator type";
     }
@@ -47,6 +55,7 @@ char* token_type_str(token_type id) {
 }
 
 void token_print(token* t) {
+    assert(t != NULL);
     printf("[%s: '%s' ] ", token_type_str(t->id), t->data);
 
 }

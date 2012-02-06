@@ -17,12 +17,6 @@ void* safe_realloc(void *old, size_t size) {
     return mem;
 }
 
-void error(const char *message, const char *param) {
-    printf("In file \"%s\": line %d\n", current_file, current_line);
-    printf("Compile error: %s%s\n", message, param);
-    exit(EXIT_FAILURE);
-}
-
 void FatalError(const char* message) {
     printf("Fatal error: %s\n", message);
     exit(EXIT_FAILURE);

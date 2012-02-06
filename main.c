@@ -12,6 +12,9 @@
 #include "parser.h"
 */
 
+extern char current_file[MAX_FILE_NAME_LENGTH];
+extern int current_line;
+
 /* helper function for deleting tokens inside vector and map */
 void hlp_delete_token(void* t) {
     token_delete( (token*) t );

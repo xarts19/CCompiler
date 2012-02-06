@@ -41,12 +41,5 @@ void map_insert(map* m, const char* key, void* value);
 void* map_find(map* m, const char* key);
 void map_remove(map* m, const char* key);
 
-/* private helper functions */
-/* declared and defined in .c file
-
-static int compute_hash(const char* key, int total_buckets);
-static bucket* new_bucket(const char* key, void* value);
-
-*/
 
 #endif

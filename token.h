@@ -7,8 +7,8 @@
 #include "utils.h"
 
 /* defined token types */
-enum token_type_enum {keyword, type, int_num, float_num, literal, identifier, operator,
-                      logic_operator, cmp_operator, assign_operator};
+enum token_type_enum {keyword, type, int_num, float_num, exp_num, literal, identifier, operator,
+                      logic_operator, cmp_operator, assign_operator, comment};
 typedef enum token_type_enum token_type;
 
 typedef struct token {

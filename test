@@ -1,8 +1,34 @@
 /* this is a 
 multiline comment */
-123 + 2 - 3 + 4-435+.034*10.0+1.
-    // this is usual comment
-for (int i = 0; i < 5; i++) {
-    a = i;
-    x = "fuuu  123";
-}
+    // this \n is usual comment
+"literal long"
+'s'
+'\''
+'t'
+'"'
+"adfa"
+" \"  "
+"'"
+
+154345
+1
+1.653543543
+123412.4564567
+.525
+435E+4535
+1.3E-31
+122.1231E3234
+.5
+asdfas
+_asdf
+asr1sdg_g2321
+true
+word
+for
+else
+_
+a
+x
+a1
+a_1
+a_

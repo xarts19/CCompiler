@@ -3,16 +3,20 @@
 const char* KEYWORDS[] = {"true", "false", "for", "while", "and", "or", "not", "xor", "if", "then", "else"};
 const char* TYPES[] = {"int", "float", "bool", "char"};
 
+extern char current_file[MAX_FILE_NAME_LENGTH];
+extern int current_line;
+
 /* Scan input string, emit array of lexical tokens */
 void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
     /* identifiers and reserved keywords */
     reserve_keywords(words);
 
     int num_tokens = 0;
+    int line = 0;
 
+    token* cur_token = NULL;
     /* read first character */
-    char *lexeme_begin = br_get_start(file_reader);
-    char *forward = lexeme_begin;
+    char *forward = br_get_start(file_reader);
     bool finished = false;
     while (!finished) {
 
@@ -24,47 +28,68 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
             case ' ':
             case '\t':
                 /* if it's a whitespace */
+                forward = br_get_next_char(file_reader);
+                br_set_base(file_reader);
                 break;
 
             case '\n':
-                /* if it's a newline */
                 ++current_line;
-                printf("\n%3d ", current_line);
+                forward = br_get_next_char(file_reader);
+                br_set_base(file_reader);
                 break;
 
-            case '/': {
-                char prev = '/';
-                forward = br_get_next_char(file_reader, forward);
-                if ( *forward == '/' || *forward == '*' ) {
-                    /* if it's a comment */
-                    forward = scan_comment(forward, file_reader);
-                } else {
-                    /* if it's other operator */
-                    forward = scan_operator(forward, prev, file_reader, tokens);
-                }
+            case '/':
+                /* comment or operator */
+                cur_token = scan_comment(file_reader);
+                if (cur_token == NULL) {}
+                    cur_token = scan_operator(file_reader);
+                assert(cur_token != NULL);
+                vector_push(tokens, cur_token);
                 break;
-            }
 
             case '"':
-                /* it's a literal */
-                forward = scan_literal(forward, file_reader, tokens);
+            case '<':
+            case '\'':
+                /* literal (const string) */
+                cur_token = scan_literal(file_reader);
+                if (cur_token == NULL) {}
+                    cur_token = scan_operator(file_reader);
+                assert(cur_token != NULL);
+                vector_push(tokens, cur_token);
                 break;
 
             default:
                 if ( isdigit(*forward) || *forward == '.' ) {
                     /* if it's a number (int or float) */
-                    forward = scan_number(forward, file_reader, tokens);
+                    cur_token = scan_number(file_reader);
+                    assert(cur_token != NULL);
+                    vector_push(tokens, cur_token);
                 }
                 else if ( isalpha(*forward) || *forward == '_' ) {
                     /* if it's a letter */
-                    forward = scan_word(forward, file_reader, tokens, words);
+                    cur_token = scan_word(file_reader);
+                    assert(cur_token != NULL);
+                    /* search for matching word in map */
+                    token* word = (token*)map_find(words, cur_token->data);
+                    /* if word that was read is reserved */
+                    if (word != NULL) {
+                        /* add it to tokens */
+                        vector_push(tokens, token_copy(word));
+                        token_delete(cur_token);
+                    } else {
+                        /* save it as identifier and add it to tokens */
+                        map_insert(words, cur_token->data, cur_token);
+                        vector_push(tokens, token_copy(cur_token));
+                    }
                 } else {
                     /* if it's some other character */
-                    forward = scan_operator(forward, '\0', file_reader, tokens);
+                    cur_token = scan_operator(file_reader);
+                    assert(cur_token != NULL);
+                    vector_push(tokens, cur_token);
                 }
                 break;
         }
-        forward = br_get_next_char(file_reader, forward);
+        forward = br_get_base(file_reader);
 
         /* print tokens as they are parsed */
         if (tokens->size > num_tokens) {
@@ -72,6 +97,11 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
             token_print(t);
             ++num_tokens;
         }
+        while (current_line > line) {
+            printf("\n%3d ", line);
+            ++line;
+        }
+
     }
 
 }
@@ -92,197 +122,364 @@ void reserve_keywords(map *words) {
  * Scan string for int and float numbers.
  * Return pointer to the last symbol of the number.
  */
-char* scan_number(char *forward, buffered_reader *file_reader, vector *tokens) {
-    bool has_dot = false;
+token* scan_number(buffered_reader *file_reader) {
     char buf[MAX_NUMBER_LENGTH];
     int size = 0;
-    do {
-        if (*forward == '.') {
-            if (has_dot) {
-                buf[size] = '.';
-                buf[size+1] = '\0';
-                error("Too many dots in a float:", buf);
-            }
-            has_dot = true;
+    int state = 0;
+    char* forward = br_get_base(file_reader);
+    while (1) {
+        switch (state) {
+            case 0:
+                if ( isdigit(*forward) ) state = 1;
+                else if (*forward == '.') state = 2;
+                else return NULL;
+                buf[size++] = *forward;
+                break;
+
+            /* integral part */
+            case 1:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) { ; }
+                else if (*forward == '.') state = 2;
+                else if (*forward == 'E') state = 4;
+                else state = 7;
+                buf[size++] = *forward;
+                break;
+            case 2:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) state = 3;
+                else {
+                    buf[size] = '\0';
+                    return error("Incorrect number: ", buf);
+                }
+                buf[size++] = *forward;
+                break;
+            case 3:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) { ; }
+                else if (*forward == 'E') state = 4;
+                else state = 8;
+                buf[size++] = *forward;
+                break;
+            case 4:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) state = 6;
+                else if (*forward == '+' || *forward == '-') state = 5;
+                else {
+                    buf[size] = '\0';
+                    return error("Incorrect number: ", buf);
+                }
+                buf[size++] = *forward;
+                break;
+            case 5:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) state = 6;
+                else {
+                    buf[size] = '\0';
+                    return error("Incorrect number: ", buf);
+                }
+                buf[size++] = *forward;
+                break;
+            case 6:
+                forward = br_get_next_char(file_reader);
+                if ( isdigit(*forward) ) { ; }
+                else state = 9;
+                buf[size++] = *forward;
+                break;
+            case 7:
+                br_set_base(file_reader);
+                buf[size-1] = '\0';
+                return token_new(int_num, buf);
+            case 8:
+                br_set_base(file_reader);
+                buf[size-1] = '\0';
+                return token_new(float_num, buf);
+            case 9:
+                br_set_base(file_reader);
+                buf[size-1] = '\0';
+                return token_new(exp_num, buf);
         }
-        buf[size++] = *forward;
-        forward = br_get_next_char(file_reader, forward);
         if (size >= MAX_NUMBER_LENGTH) {
-            buf[MAX_NUMBER_LENGTH-1] = '\0';
-            error("Too large number: ", buf);
+            buf[size] = '\0';
+            return error("Too large number: ", buf);
         }
-    } while ( isdigit(*forward) || *forward == '.');
-    buf[size] = '\0';
-    token_type token_t = int_num;
-    if (has_dot) token_t = float_num;
-    vector_push(tokens, token_new(token_t, buf));
-    return --forward;
+    }
+    return NULL;
 }
 
 /*
  * Scan string for identifiers and reserved keywords.
  * Return pointer to the last symbol of the word.
  */
-char* scan_word(char *forward, buffered_reader *file_reader, vector *tokens, map *words) {
-    /* read following word */
+token* scan_word(buffered_reader *file_reader) {
     char buf[MAX_ID_LENGTH];
     int size = 0;
-    do {
-        buf[size++] = *forward;
-        forward = br_get_next_char(file_reader, forward);
-        if (size >= MAX_ID_LENGTH) {
-            buf[MAX_ID_LENGTH-1] = '\0';
-            error("Too large id: ", buf);
+    int state = 0;
+    char* forward = br_get_base(file_reader);
+    while (1) {
+        switch (state) {
+            case 0:
+                if ( isalpha(*forward) || *forward == '_' ) state = 1;
+                else return NULL;
+                buf[size++] = *forward;
+                break;
+            case 1:
+                forward = br_get_next_char(file_reader);
+                if ( isalpha(*forward) || *forward == '_' || isdigit(*forward) ) { ; }
+                else state = 2;
+                buf[size++] = *forward;
+                break;
+            case 2:
+                buf[size-1] = '\0';
+                br_set_base(file_reader);
+                return token_new(identifier, buf);
         }
-    } while ( isalnum(*forward) || *forward == '_');
-    buf[size] = '\0';
-
-    /* search for matching word in map */
-    token* word = (token*)map_find(words, buf);
-    /* if word that was read is reserved */
-    if (word != NULL) {
-        /* add it to tokens */
-        vector_push(tokens, word);
-    } else {
-        /* save it as identifier and add it to tokens */
-        map_insert(words, buf, token_new(identifier, buf));
-        vector_push(tokens, token_new(identifier, buf));
+        if (size >= MAX_ID_LENGTH) {
+            buf[size] = '\0';
+            return error("Too large identifier: ", buf);
+        }
     }
-    return --forward;
+    return NULL;
 }
 
 /*
  * Scan for constant strings of text.
  * Return pointer to the last symbol of the literal.
  */
-char* scan_literal(char *forward, buffered_reader *file_reader, vector *tokens) {
+token* scan_literal(buffered_reader *file_reader) {
     char buf[MAX_LITERAL_LENGTH];
     int size = 0;
-    do {
-        buf[size++] = *forward;
-        forward = br_get_next_char(file_reader, forward);
-        if (*forward == UNIX_EOF || *forward == '\n')
-            error("Missing terminating \" character", "");
-        if (size >= MAX_LITERAL_LENGTH)
-            error("Too large literal", "");
-    } while ( *forward != '"' );
-    buf[size++] = *forward;
-    buf[size] = '\0';
-    vector_push(tokens, token_new(literal, buf));
-    return forward;
+    int state = 0;
+    char* forward = br_get_base(file_reader);
+    while (1) {
+        switch (state) {
+            case 0:
+                if (*forward == '\'') state = 1;
+                else if (*forward == '"') state = 5;
+                else if (*forward == '<') state = 8;
+                else return NULL;
+                buf[size++] = *forward;
+                break;
+
+            /* single-quote (short) literal (character) */
+            case 1:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '\\') state = 2;
+                else if (*forward == '\'') return error("Empty const character", "");
+                else state = 3;
+                buf[size++] = *forward;
+                break;
+            case 2:
+                forward = br_get_next_char(file_reader);
+                buf[size++] = *forward;
+                state = 3;
+                break;
+            case 3:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '\'') state = 4;
+                else return error("Not closed const character", "");
+                buf[size++] = *forward;
+                break;
+            case 4:
+                buf[size] = '\0';
+                br_get_next_char(file_reader);
+                br_set_base(file_reader);
+                return token_new(literal, buf);
+
+            /* double-quote (long) literal (string) */
+            case 5:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '\\') state = 6;
+                else if (*forward == '"') state = 7;
+                buf[size++] = *forward;
+                break;
+            case 6:
+                forward = br_get_next_char(file_reader);
+                buf[size++] = *forward;
+                state = 5;
+                break;
+            case 7:
+                buf[size] = '\0';
+                br_get_next_char(file_reader);
+                br_set_base(file_reader);
+                return token_new(literal, buf);
+
+            /* angle-quote literal (string) */
+            case 8:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '\\') state = 9;
+                else if (*forward == '>') state = 10;
+                buf[size++] = *forward;
+                break;
+            case 9:
+                forward = br_get_next_char(file_reader);
+                buf[size++] = *forward;
+                state = 8;
+                break;
+            case 10:
+                buf[size] = '\0';
+                br_get_next_char(file_reader);
+                br_set_base(file_reader);
+                return token_new(literal, buf);
+        }
+        if (*forward == UNIX_EOF)
+            return error("EOF while scanning comment", "");
+        else if (*forward == '\n') {
+            if (buf[0] == '<') return NULL;
+            else
+                return error("New line in literal", "");
+        }
+        if (size >= MAX_LITERAL_LENGTH) {
+            buf[size] = '\0';
+            return error("Too large literal: ", buf);
+        }
+    }
+    return NULL;
 }
 
-/*
- * Scan for various operators.
- * Return pointer to the last symbol of the operator.
- */
-char* scan_operator(char *forward, char prev, buffered_reader *file_reader, vector *tokens) {
-    char buf[3];
-    token_type token_t = operator;
-    if (prev == '\0') {
-        buf[0] = *forward;
-        forward = br_get_next_char(file_reader, forward);
-    } else
-        buf[0] = prev;
-    buf[1] = '\0';
-    buf[2] = '\0';
-    switch (buf[0]) {
-        case '<':
-            switch (*forward) {
-                case '>':
-                    /* not equals */
-                    buf[0] = '!';
-                    buf[1] = '=';
-                    token_t = cmp_operator;
-                    break;
-                case '=':
-                    /* less then or equal to */
-                    buf[1] = '=';
-                    token_t = cmp_operator;
-                    break;
-                case '<':
-                    /* shift left */
-                    buf[1] = '<';
-                    break;
-                default:
-                    /* less then */
-                    token_t = cmp_operator;
-                    break;
-            }
-            break;
-        case '>':
-            switch (*forward) {
-                case '=':
-                    /* greater then or equal to */
-                    buf[1] = '=';
-                    token_t = cmp_operator;
-                    break;
-                case '>':
-                    /* shift right */
-                    buf[1] = '>';
-                    break;
-                default:
-                    /* greater then */
-                    token_t = cmp_operator;
-                    break;
-            }
-            break;
-        case '!':
-            switch (*forward) {
-                case '=':
-                    /* not equals */
-                    buf[1] = '=';
-                    token_t = cmp_operator;
-                    break;
-                default:
-                    /* not */
-                    token_t = logic_operator;
-                    break;
-            }
-            break;
-        case '=':
-            switch (*forward) {
-                case '=':
-                    /* equals */
-                    buf[1] = '=';
-                    token_t = cmp_operator;
-                    break;
-                default:
-                    /* assignment */
-                    token_t = assign_operator;
-                    break;
-            }
-            break;
-        default:
-            break;
+/* /\* */
+/*  * Scan for various operators. */
+/*  * Return pointer to the last symbol of the operator. */
+/*  *\/ */
+/* token* scan_operator(char prev, buffered_reader *file_reader) { */
+/*     char buf[3]; */
+/*     token_type token_t = operator; */
+/*     if (prev == '\0') { */
+/*         buf[0] = *forward; */
+/*         forward = br_get_next_char(file_reader); */
+/*     } else */
+/*         buf[0] = prev; */
+/*     buf[1] = '\0'; */
+/*     buf[2] = '\0'; */
+/*     switch (buf[0]) { */
+/*         case '<': */
+/*             switch (*forward) { */
+/*                 case '>': */
+/*                     /\* not equals *\/ */
+/*                     buf[0] = '!'; */
+/*                     buf[1] = '='; */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*                 case '=': */
+/*                     /\* less then or equal to *\/ */
+/*                     buf[1] = '='; */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*                 case '<': */
+/*                     /\* shift left *\/ */
+/*                     buf[1] = '<'; */
+/*                     break; */
+/*                 default: */
+/*                     /\* less then *\/ */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*             } */
+/*             break; */
+/*         case '>': */
+/*             switch (*forward) { */
+/*                 case '=': */
+/*                     /\* greater then or equal to *\/ */
+/*                     buf[1] = '='; */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*                 case '>': */
+/*                     /\* shift right *\/ */
+/*                     buf[1] = '>'; */
+/*                     break; */
+/*                 default: */
+/*                     /\* greater then *\/ */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*             } */
+/*             break; */
+/*         case '!': */
+/*             switch (*forward) { */
+/*                 case '=': */
+/*                     /\* not equals *\/ */
+/*                     buf[1] = '='; */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*                 default: */
+/*                     /\* not *\/ */
+/*                     token_t = logic_operator; */
+/*                     break; */
+/*             } */
+/*             break; */
+/*         case '=': */
+/*             switch (*forward) { */
+/*                 case '=': */
+/*                     /\* equals *\/ */
+/*                     buf[1] = '='; */
+/*                     token_t = cmp_operator; */
+/*                     break; */
+/*                 default: */
+/*                     /\* assignment *\/ */
+/*                     token_t = assign_operator; */
+/*                     break; */
+/*             } */
+/*             break; */
+/*         default: */
+/*             break; */
+/*     } */
+/*     vector_push(tokens, token_new(token_t, buf)); */
+/*     if (buf[1] == '\0') */
+/*         return --forward; */
+/*     else */
+/*         return forward; */
+/* } */
+
+
+/* returns pointer to the comment token */
+token* scan_comment(buffered_reader *file_reader) {
+    int state = 0;
+    char* forward = br_get_base(file_reader);
+    while (1) {
+        switch (state) {
+            case 0:
+                if (*forward == '/') state = 1;
+                else return NULL;
+                break;
+            case 1:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '*') state = 2;
+                else if (*forward == '/') state = 5;
+                else return NULL;
+                break;
+            case 2:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '*') state = 3;
+                break;
+            case 3:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '/') state = 4;
+                else state = 2;
+                break;
+            case 4:
+                br_get_next_char(file_reader);
+                br_set_base(file_reader);
+                /* end of multiline comment */
+                return token_new(comment, "multiline");
+            case 5:
+                forward = br_get_next_char(file_reader);
+                if (*forward == '\n') state = 6;
+                else state = 5;
+                break;
+            case 6:
+                forward = br_get_next_char(file_reader);
+                br_set_base(file_reader);
+                /* end of single-line comment */
+                return token_new(comment, "single-line");
+        }
+        if (*forward == UNIX_EOF)
+            return error("EOF while scanning comment", "");
+        else if (*forward == '\n')
+            ++current_line;
     }
-    vector_push(tokens, token_new(token_t, buf));
-    if (buf[1] == '\0')
-        return --forward;
-    else
-        return forward;
+    return NULL;
 }
 
-/* returns pointer to the last symbol of the comment */
-char* scan_comment(char *forward, buffered_reader *file_reader) {
-    if (*forward == '/') {
-        /* single-line comment */
-        while (*forward != '\n') {
-            forward = br_get_next_char(file_reader, forward);
-            if (*forward == UNIX_EOF)
-                return --forward;
-        }
-    } else {
-        /* multiline comment */
-        char prev = *forward;
-        forward = br_get_next_char(file_reader, forward);
-        while ( !(prev == '*' && *forward == '/') ) {
-            prev = *forward;
-            forward = br_get_next_char(file_reader, forward);
-            if (*forward == UNIX_EOF)
-                return --forward;
-        }
-        forward += 1;
-    }
-    return forward;
+token* error(const char *message, const char *param) {
+    printf("In file \"%s\": line %d\n", current_file, current_line);
+    printf("Compile error: %s%s\n", message, param);
+    exit(EXIT_FAILURE);
 }
