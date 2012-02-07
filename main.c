@@ -8,9 +8,8 @@
 #include "map.h"
 #include "token.h"
 #include "reader.h"
-/*
 #include "parser.h"
-*/
+
 
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
@@ -31,8 +30,11 @@ void compile(char *input_file_name) {
     printf(">>> Tokens ===========================\n");
     lexer(file_reader, tokens, words);
     printf("\n");
-    //print_token_vect("Tokens:", tokens);
 
+    expr* tree = parse(tokens);
+    tree_print(tree);
+
+    tree_delete(tree);
     vector_delete(tokens, hlp_delete_token);
     map_delete(words, hlp_delete_token);
     //br_close_file(file_reader);
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         compile(argv[1]);
     } else {
-        error("No input files.", "");
+        InputError("No input files.", "");
     }
     return EXIT_SUCCESS;
 }

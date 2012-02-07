@@ -1,4 +1,4 @@
-#ifndef ATS_H_
+#ifndef AST_H_
 #define AST_H_
 
 typedef struct exp_tag {

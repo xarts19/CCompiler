@@ -6,6 +6,8 @@ const char* TYPES[] = {"int", "float", "bool", "char"};
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
 
+static token* error(const char* message, const char* param);
+
 /* Scan input string, emit array of lexical tokens */
 void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
     /* identifiers and reserved keywords */
@@ -13,6 +15,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
 
     int num_tokens = 0;
     int line = 0;
+    printf("\n%3d ", line++);
 
     token* cur_token = NULL;
     /* read first character */

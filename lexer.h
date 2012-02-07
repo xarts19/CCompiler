@@ -28,6 +28,4 @@ token* scan_literal(buffered_reader *file_reader);
 token* scan_operator(buffered_reader *file_reader);
 token* scan_comment(buffered_reader *file_reader);
 
-token* error(const char* message, const char* param);
-
 #endif
