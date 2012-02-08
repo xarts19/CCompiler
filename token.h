@@ -7,13 +7,31 @@
 #include "utils.h"
 
 /* defined token types */
-enum token_type_enum {keyword, type, int_num, float_num, exp_num, literal,
-                      identifier, operator, logic_operator, cmp_operator,
-                      assign_operator, bitwise_operator, pointer_operator,
-                      preproc_operator, comment};
-typedef enum token_type_enum token_type;
+typedef enum token_type_enum {e_keyword,          /* while, if, ... */
+                      e_type,             /* int, float, ... */
+                      e_number,           /* 14, 4.6, 3.5E-23, ... */
+                      e_literal,          /* "asfaera", 'b', ... */
+                      e_open_paren,       /* ( */
+                      e_close_paren,      /* ) */
+                      e_open_curly,       /* { */
+                      e_close_curly,      /* } */
+                      e_open_bracket,     /* [ */
+                      e_close_bracket,    /* ] */
+                      e_colon,            /* ; */
+                      e_comma,            /* , */
+                      e_identifier,       /* size, ball, ... */
+                      e_operator,         /* +, -, ... */
+                      e_logic_operator,   /* ||, &&, ... */
+                      e_cmp_operator,     /* <, >, ==, ... */
+                      e_assign_operator,  /* =, +=, *=, &=, ... */
+                      e_bitwise_operator, /* <<, &, |, ...*/
+                      e_pointer_operator, /* ->, . */
+                      e_preproc_operator, /* # */
+                      e_comment           /* //this is a comment, ... */
+} token_type;
 
 typedef struct token {
+    int line;
     token_type id;
     char *data;
 } token;
@@ -57,8 +75,6 @@ void token_print(token* t);
    o<=
 
    Pointer:
-   op[
-   op]
    o->
    op.
 

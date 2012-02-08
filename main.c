@@ -31,10 +31,8 @@ void compile(char *input_file_name) {
     lexer(file_reader, tokens, words);
     printf("\n");
 
-    expr* tree = parse(tokens);
-    tree_print(tree);
+    parse(tokens);
 
-    tree_delete(tree);
     vector_delete(tokens, hlp_delete_token);
     map_delete(words, hlp_delete_token);
     //br_close_file(file_reader);
