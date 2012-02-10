@@ -1,8 +1,5 @@
 #include "lexer.h"
 
-const char* KEYWORDS[] = {"true", "false", "for", "while", "and", "or", "not", "xor", "if", "then", "else"};
-const char* TYPES[] = {"int", "float", "bool", "char"};
-
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
 
@@ -25,6 +22,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
 
         switch (*forward) {
             case UNIX_EOF:
+                vector_push(tokens, token_new(e_eof, "$"));
                 finished = true;
                 break;
 
@@ -111,13 +109,20 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
 /* Save reserved keywords in words map */
 void reserve_keywords(map *words) {
     /* keywords */
-    for (unsigned int i=0; i<(sizeof(KEYWORDS)/sizeof(KEYWORDS[0])); i++) {
-        map_insert(words, KEYWORDS[i], token_new(e_keyword, KEYWORDS[i]));
-    }
-    /* types */
-    for (unsigned int i=0; i<(sizeof(TYPES)/sizeof(TYPES[0])); i++) {
-        map_insert(words, TYPES[i], token_new(e_type, TYPES[i]));
-    }
+    map_insert(words, "while", token_new(e_while, "while"));
+    map_insert(words, "for", token_new(e_for, "for"));
+    map_insert(words, "if", token_new(e_if, "if"));
+    map_insert(words, "then", token_new(e_then, "then"));
+    map_insert(words, "else", token_new(e_else, "else"));
+    map_insert(words, "do", token_new(e_do, "do"));
+    map_insert(words, "switch", token_new(e_switch, "switch"));
+    map_insert(words, "case", token_new(e_case, "case"));
+    map_insert(words, "typedef", token_new(e_typedef, "typedef"));
+    map_insert(words, "struct", token_new(e_struct, "struct"));
+    map_insert(words, "enum", token_new(e_enum, "enum"));
+
+    map_insert(words, "int", token_new(e_type, "int"));
+    map_insert(words, "char", token_new(e_type, "char"));
 }
 
 /*
@@ -355,15 +360,16 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '+':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o++");
+                    strcpy(buf, "++");
+                    token_t = e_incr;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o+=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "+=");
                     break;
                 default:
-                    strcpy(buf, "op+");
+                    strcpy(buf, "+");
+                    token_t = e_plus;
                     break;
             }
             break;
@@ -372,20 +378,21 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '-':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o--");
+                    strcpy(buf, "--");
+                    token_t = e_decr;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o-=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "-=");
                     break;
                 case '>':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o->");
-                    token_t = e_pointer_operator;
+                    strcpy(buf, "->");
+                    token_t = e_arrow;
                     break;
                 default:
-                    strcpy(buf, "op-");
+                    strcpy(buf, "-");
+                    token_t = e_minus;
                     break;
             }
             break;
@@ -394,11 +401,11 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o*=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "*=");
                     break;
                 default:
-                    strcpy(buf, "op*");
+                    strcpy(buf, "*");
+                    token_t = e_mult;
                     break;
             }
             break;
@@ -407,11 +414,11 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o/=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "/=");
                     break;
                 default:
-                    strcpy(buf, "op/");
+                    strcpy(buf, "/");
+                    token_t = e_div;
                     break;
             }
             break;
@@ -420,11 +427,11 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o%=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "%=");
                     break;
                 default:
-                    strcpy(buf, "op%");
+                    strcpy(buf, "%");
+                    token_t = e_mod;
                     break;
             }
             break;
@@ -433,12 +440,12 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o==");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, "==");
+                    token_t = e_eq;
                     break;
                 default:
-                    strcpy(buf, "op=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "=");
+                    token_t = e_assign;
                     break;
             }
             break;
@@ -447,12 +454,12 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o!=");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, "!=");
+                    token_t = e_noteq;
                     break;
                 default:
-                    strcpy(buf, "op!");
-                    token_t = e_logic_operator;
+                    strcpy(buf, "!");
+                    token_t = e_not;
                     break;
             }
             break;
@@ -461,8 +468,8 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o>=");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, ">=");
+                    token_t = e_moreeq;
                     break;
                 case '>':
                     forward = br_get_next_char(file_reader);
@@ -470,17 +477,15 @@ token* scan_operator(buffered_reader *file_reader) {
                         case '=':
                             br_get_next_char(file_reader);
                             strcpy(buf, ">>=");
-                            token_t = e_assign_operator;
                             break;
                         default:
-                            strcpy(buf, "o>>");
-                            token_t = e_bitwise_operator;
+                            strcpy(buf, ">>");
                             break;
                     }
                     break;
                 default:
-                    strcpy(buf, "op>");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, ">");
+                    token_t = e_more;
                     break;
             }
             break;
@@ -489,8 +494,8 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o<=");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, "<=");
+                    token_t = e_lesseq;
                     break;
                 case '<':
                     forward = br_get_next_char(file_reader);
@@ -498,17 +503,15 @@ token* scan_operator(buffered_reader *file_reader) {
                         case '=':
                             br_get_next_char(file_reader);
                             strcpy(buf, "<<=");
-                            token_t = e_assign_operator;
                             break;
                         default:
-                            strcpy(buf, "o<<");
-                            token_t = e_bitwise_operator;
+                            strcpy(buf, "<<");
                             break;
                     }
                     break;
                 default:
-                    strcpy(buf, "op<");
-                    token_t = e_cmp_operator;
+                    strcpy(buf, "<");
+                    token_t = e_less;
                     break;
             }
             break;
@@ -517,17 +520,15 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '&':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o&&");
-                    token_t = e_logic_operator;
+                    strcpy(buf, "&&");
+                    token_t = e_and;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o&=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "&=");
                     break;
                 default:
-                    strcpy(buf, "op&");
-                    token_t = e_bitwise_operator;
+                    strcpy(buf, "&");
                     break;
             }
             break;
@@ -536,17 +537,15 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '|':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o||");
-                    token_t = e_logic_operator;
+                    strcpy(buf, "||");
+                    token_t = e_or;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o|=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "|=");
                     break;
                 default:
-                    strcpy(buf, "op|");
-                    token_t = e_bitwise_operator;
+                    strcpy(buf, "|");
                     break;
             }
             break;
@@ -555,76 +554,74 @@ token* scan_operator(buffered_reader *file_reader) {
             switch (*forward) {
                 case '=':
                     br_get_next_char(file_reader);
-                    strcpy(buf, "o^=");
-                    token_t = e_assign_operator;
+                    strcpy(buf, "^=");
                     break;
                 default:
-                    strcpy(buf, "op^");
-                    token_t = e_bitwise_operator;
+                    strcpy(buf, "^");
                     break;
             }
             break;
         case '~':
             br_get_next_char(file_reader);
-            strcpy(buf, "op~");
-            token_t = e_bitwise_operator;
+            strcpy(buf, "~");
             break;
         case '.':
             br_get_next_char(file_reader);
-            strcpy(buf, "op.");
-            token_t = e_pointer_operator;
+            strcpy(buf, ".");
+            token_t = e_dot;
             break;
         case ',':
             br_get_next_char(file_reader);
-            strcpy(buf, "op,");
+            strcpy(buf, ",");
             token_t = e_comma;
             break;
         case '[':
             br_get_next_char(file_reader);
-            strcpy(buf, "op[");
+            strcpy(buf, "[");
             token_t = e_open_bracket;
             break;
         case ']':
             br_get_next_char(file_reader);
-            strcpy(buf, "op]");
+            strcpy(buf, "]");
             token_t = e_close_bracket;
             break;
         case ';':
             br_get_next_char(file_reader);
-            strcpy(buf, "op;");
-            token_t = e_colon;
+            strcpy(buf, ";");
+            token_t = e_semicolon;
             break;
         case ':':
             br_get_next_char(file_reader);
-            strcpy(buf, "op;");
+            strcpy(buf, ":");
+            token_t = e_colon;
             break;
         case '?':
             br_get_next_char(file_reader);
-            strcpy(buf, "op;");
+            strcpy(buf, "?");
             break;
         case '(':
             br_get_next_char(file_reader);
-            strcpy(buf, "op(");
+            strcpy(buf, "(");
             token_t = e_open_paren;
             break;
         case ')':
             br_get_next_char(file_reader);
-            strcpy(buf, "op)");
+            strcpy(buf, ")");
             token_t = e_close_paren;
             break;
         case '{':
             br_get_next_char(file_reader);
-            strcpy(buf, "op{");
+            strcpy(buf, "{");
             token_t = e_open_curly;
             break;
         case '}':
             br_get_next_char(file_reader);
-            strcpy(buf, "op}");
+            strcpy(buf, "}");
             token_t = e_close_curly;
             break;
         case '#':
             br_get_next_char(file_reader);
-            strcpy(buf, "op#");
+            strcpy(buf, "#");
             token_t = e_preproc_operator;
             break;
         default:

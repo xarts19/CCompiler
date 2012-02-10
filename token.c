@@ -27,55 +27,122 @@ token* token_copy(const token* t) {
 
 char* token_type_str(token_type id) {
     switch (id) {
-        case e_keyword:
-            return "key";
-        case e_type:
-            return "type";
-        case e_number:
-            return "num";
-        case e_literal:
-            return "literal";
         case e_open_paren:
-            return "(";
+            return "e_open_paren";
         case e_close_paren:
-            return ")";
+            return "e_close_paren";
         case e_open_curly:
-            return "{";
+            return "e_open_curly";
         case e_close_curly:
-            return "}";
+            return "e_close_curly";
         case e_open_bracket:
-            return "[";
+            return "e_open_bracket";
         case e_close_bracket:
-            return "]";
+            return "e_close_bracket";
+        case e_semicolon:
+            return "e_semicolon";
         case e_colon:
-            return ":";
+            return "e_colon";
         case e_comma:
-            return ",";
+            return "e_comma";
+        case e_while:
+            return "e_while";
+        case e_for:
+            return "e_for";
+        case e_if:
+            return "e_if";
+        case e_then:
+            return "e_then";
+        case e_else:
+            return "e_else";
+        case e_do:
+            return "e_do";
+        case e_switch:
+            return "e_switch";
+        case e_case:
+            return "e_case";
+        case e_typedef:
+            return "e_typedef";
+        case e_struct:
+            return "e_struct";
+        case e_enum:
+            return "e_enum";
+        case e_number:
+            return "e_number";
+        case e_literal:
+            return "e_literal";
         case e_identifier:
-            return "ident";
-        case e_operator:
-            return "op";
-        case e_logic_operator:
-            return "logic_op";
-        case e_cmp_operator:
-            return "cmp_op";
-        case e_assign_operator:
-            return "assign_op";
-        case e_bitwise_operator:
-            return "bitwise";
-        case e_pointer_operator:
-            return "pointer";
-        case e_preproc_operator:
-            return "preproc";
+            return "e_identifier";
         case e_comment:
-            return "comment";
+            return "e_comment";
+        case e_type:
+            return "e_type";
+        case e_signed:
+            return "e_signed";
+        case e_unsigned:
+            return "e_unsigned";
+        case e_char:
+            return "e_char";
+        case e_short:
+            return "e_short";
+        case e_int:
+            return "e_int";
+        case e_long:
+            return "e_long";
+        case e_float:
+            return "e_float";
+        case e_double:
+            return "e_double";
+        case e_void:
+            return "e_void";
+        case e_assign:
+            return "e_assign";
+        case e_plus:
+            return "e_plus";
+        case e_minus:
+            return "e_minus";
+        case e_mult:
+            return "e_mult";
+        case e_div:
+            return "e_div";
+        case e_mod:
+            return "e_mod";
+        case e_incr:
+            return "e_incr";
+        case e_decr:
+            return "e_decr";
+        case e_not:
+            return "e_not";
+        case e_and:
+            return "e_and";
+        case e_or:
+            return "e_or";
+        case e_eq:
+            return "e_eq";
+        case e_noteq:
+            return "e_noteq";
+        case e_more:
+            return "e_more";
+        case e_less:
+            return "e_less";
+        case e_moreeq:
+            return "e_moreeq";
+        case e_lesseq:
+            return "e_lesseq";
+        case e_dot:
+            return "e_dot";
+        case e_arrow:
+            return "e_arrow";
+        case e_operator:
+            return "e_operator";
+        case e_preproc_operator:
+            return "e_preproc_operator";
         default:
-            return "undefined operator type";
-    }
-    return NULL;
+            return "Unknown token";
+        }
 }
 
 void token_print(token* t) {
     assert(t != NULL);
-    printf("[%s: '%s' ] ", token_type_str(t->id), t->data);
+    printf("['%s'] ", t->data);
 }

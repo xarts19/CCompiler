@@ -1,5 +1,23 @@
 #!/usr/bin/env python
 
+##
+## Generates LR(0) parsing tables for list of rules (see file grammar.py).
+## Gets token's numbers from token.h file (they are enums there).
+## Numbers, along with manually given numbers for nonterminals are
+## compacted to form continuous sequence.
+##
+## Writes 3 files:
+##   table    action for each state and symbol:
+##            a - accept, s STATE - shift STATE to stack, r RULE_NUM -
+##            reduce by rule RULE_NUM, g STATE - goto STATE, missing cells are errors.
+##   mapping  maps compacted numbers to real tokens and teminals numbers.
+##   rules    rules from grammar.py with converted symbols to
+##            compacted numbers.
+##
+## All algorithms are from the book "Aho - Compilers - Principles,
+## Techniques, and Tools 2e", chapter 4.6.
+##
+
 import re
 from pprint import pprint
 import grammar
@@ -104,8 +122,8 @@ def closure(I):
                             added = True
     return J
 
+# save results for later calls
 GOTO = {}
-
 def goto(I, X):
     if (I, X) in GOTO:
         return GOTO[(I, X)]
@@ -137,9 +155,14 @@ def build_canonical_collection_of_sets():
                     added = True
     return C
 
-def build_parse_table(tokens):
-    FIRST = build_first()
-    FOLLOW = build_follow(FIRST)
+def set_action(action, item, key, value):
+    if not action.get(key):
+        action[key] = value
+    else:
+        print "Conflict on with rule ", item, ": ", key, "=>", value
+        print action[key], " already set"
+
+def build_LR_parse_table(tokens):
     C = build_canonical_collection_of_sets()
     action = {}
     states = {}
@@ -150,16 +173,20 @@ def build_parse_table(tokens):
             dot_pos = item.index('.')
             if dot_pos == len(item) - 1:
                 if item[0] == "START":
-                    action[(num, "$")] = "a 0"
+                    set_action(action, item, (num, "$"), "a 0")
                 else:
                     for sym in FOLLOW[item[0]]:
-                        action[(num, sym)] = "r " + str(RULES.index(tuple(item[:-1])))
+                        set_action(action, item, (num, sym), "r " + str(RULES.index(tuple(item[:-1]))) )
             else:
                 sym = item[dot_pos+1]
-                action[(num, sym)] = "s " + str(states[ frozenset(goto(I, sym)) ])
+                a = 's '
+                if sym in NONTERM:
+                    a = 'g '
+                action[(num, sym)] = a + str(states[ frozenset(goto(I, sym)) ])
 
+    print(grammar.R)
     print_table(action, states)
-    #print_details(action, C)
+    print_details(action, C)
     save_to_file(action, C, tokens)
 
 def save_to_file(action, C, tokens):
@@ -168,10 +195,9 @@ def save_to_file(action, C, tokens):
     mapping = []
     mapping_dict = {}
     for i, sym in enumerate(list(TERM) + list(NONTERM)):
-        if sym != "START":
-            mapping.append(str(i)+' '+str(tokens[sym]))
-            mapping_dict[sym] = i
-    f = file("mapping", 'w')
+        mapping.append(str(i)+' '+str(tokens[sym]))
+        mapping_dict[sym] = i
+    f = file("../mapping", 'w')
     f.write(str(len(mapping))+"\n")
     f.write("\n".join(mapping))
     f.write('\n')
@@ -179,9 +205,21 @@ def save_to_file(action, C, tokens):
     content = []
     for (state, sym), res in action.items():
         content.append(str(state)+" "+str(mapping_dict[sym])+" "+res)
-    f = file("table", 'w')
+    f = file("../table", 'w')
     f.write(str(len(C))+"\n")
     f.write("\n".join(content))
+    f.write("\n")
+    f.close()
+
+    rules = []
+    for rule in RULES:
+        rules.append(str(len(rule))+' ')
+        for sym in rule:
+            rules.append(str(mapping_dict[sym])+' ')
+        rules.append('\n')
+    f = file("../rules", 'w')
+    f.write(str(len(RULES))+"\n")
+    f.write("".join(rules))
     f.write("\n")
     f.close()
 
@@ -194,7 +232,7 @@ def print_table(action, states):
     for num in range(len(states)):
         print str(num).rjust(6),
         for sym in header:
-            print action.get((num, sym), "err").rjust(6),
+            print action.get((num, sym), "   ").rjust(6),
         print
 
 def print_details(action, C):
@@ -203,9 +241,22 @@ def print_details(action, C):
         for sym in list(TERM) + list(NONTERM):
             print sym.rjust(15), action.get((num, sym), "err").rjust(10)
 
+def build_LL_parse_table(tokens):
+    action = {}
+    for rule in RULES:
+        A = rule[0]
+        for a in [term for term in FIRST[A] if term in TERM]:
+            action[(A, a)] = rule
+        if 'e' in FIRST[A]:
+            for b in FOLLOW[A]:
+                action[(A, b)] = rule
+    pprint(action)
+
 def main():
     tokens = scan_tokens()
-    build_parse_table(tokens)
+    FIRST = build_first()
+    FOLLOW = build_follow(FIRST)
+    build_LL_parse_table(tokens)
 
 if __name__=="__main__":
     main()

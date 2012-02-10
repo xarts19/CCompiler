@@ -52,5 +52,6 @@ void* vector_insert(vector* v, void* value, int index);
 
 void vector_push(vector* v, void* value);
 void* vector_pop(vector* v);
+void* vector_peek(vector* v);
 
 #endif

@@ -38,3 +38,7 @@ void vector_push(vector* v, void* value) {
 void* vector_pop(vector* v) {
     return v->elements[ --(v->size) ];
 }
+
+void* vector_peek(vector* v) {
+    return v->elements[v->size-1];
+}

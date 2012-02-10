@@ -31,11 +31,12 @@ void compile(char *input_file_name) {
     lexer(file_reader, tokens, words);
     printf("\n");
 
-    parse(tokens);
+    parse_topdown(tokens);
+    //parse_bottomup(tokens);
 
     vector_delete(tokens, hlp_delete_token);
     map_delete(words, hlp_delete_token);
-    //br_close_file(file_reader);
+    br_close_file(file_reader);
 }
 
 int main(int argc, char *argv[]) {

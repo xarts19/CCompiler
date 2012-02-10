@@ -8,6 +8,7 @@
 
 /* defined token types */
 typedef enum token_type_enum {
+    e_eof              = 0,
     /* punctuation */
     e_open_paren       = 1,       /* ( */
     e_close_paren      = 2,       /* ) */
@@ -15,8 +16,9 @@ typedef enum token_type_enum {
     e_close_curly      = 4,       /* } */
     e_open_bracket     = 5,       /* [ */
     e_close_bracket    = 6,       /* ] */
-    e_colon            = 7,       /* ; */
-    e_comma            = 8,       /* , */
+    e_semicolon        = 7,       /* ; */
+    e_colon            = 8,       /* : */
+    e_comma            = 9,       /* , */
 
     /* keywords */
     e_while            =20,
@@ -38,6 +40,7 @@ typedef enum token_type_enum {
     e_comment          =43,     /* //this is a comment, ... */
 
     /* type */
+    e_type             =50,
     e_signed           =51,
     e_unsigned         =52,
     e_char             =53,
@@ -69,6 +72,8 @@ typedef enum token_type_enum {
     e_dot              =87,
     e_arrow            =88,
 
+    e_operator         =101,    /* placeholder */
+
     /* other */
     e_preproc_operator =150,    /* # */
 } token_type;
@@ -86,40 +91,4 @@ char* token_type_str(token_type id);
 void token_print(token* t);
 
 #endif
-
-/* operator mnemonics
-
-   Arithmetic:
-   op+    o+=    o++
-   op-    o-=    o--
-   op*    o*=
-   op/    o/=
-   op%    o%=
-
-   Bitwise:
-   o<<    <<=
-   o>>    >>=
-   op|    o|=
-   op&    o&=
-   op^    o^=
-   op~
-
-   Logical:
-   op!
-   o&&
-   o||
-
-   Comparison:
-   o==
-   o!=
-   op>
-   op<
-   o>=
-   o<=
-
-   Pointer:
-   o->
-   op.
-
- */
 
