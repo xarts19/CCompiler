@@ -9,6 +9,7 @@
 /* defined token types */
 typedef enum token_type_enum {
     e_eof              = 0,
+
     /* punctuation */
     e_open_paren       = 1,       /* ( */
     e_close_paren      = 2,       /* ) */
@@ -58,8 +59,8 @@ typedef enum token_type_enum {
     e_mult             =73,
     e_div              =74,
     e_mod              =75,
-    e_incr             =76,
-    e_decr             =77,
+    e_incr_pre         =76,
+    e_decr_pre         =77,
     e_not              =78,
     e_and              =79,
     e_or               =80,
@@ -71,6 +72,11 @@ typedef enum token_type_enum {
     e_lesseq           =86,
     e_dot              =87,
     e_arrow            =88,
+    e_incr_post        =89,
+    e_decr_post        =90,
+    e_dot_star         =91,
+    e_arrow_star       =92,
+    e_addr             =93,
 
     e_operator         =101,    /* placeholder */
 

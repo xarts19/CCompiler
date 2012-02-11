@@ -27,6 +27,8 @@ token* token_copy(const token* t) {
 
 char* token_type_str(token_type id) {
     switch (id) {
+        case e_eof:
+            return "End of file";
         case e_open_paren:
             return "e_open_paren";
         case e_close_paren:
@@ -107,10 +109,14 @@ char* token_type_str(token_type id) {
             return "e_div";
         case e_mod:
             return "e_mod";
-        case e_incr:
-            return "e_incr";
-        case e_decr:
-            return "e_decr";
+        case e_incr_pre:
+            return "e_incr_pre";
+        case e_decr_pre:
+            return "e_decr_pre";
+        case e_incr_post:
+            return "e_incr_post";
+        case e_decr_post:
+            return "e_decr_post";
         case e_not:
             return "e_not";
         case e_and:
@@ -122,21 +128,27 @@ char* token_type_str(token_type id) {
         case e_noteq:
             return "e_noteq";
         case e_more:
-            return "e_more";
+            return ">";
         case e_less:
-            return "e_less";
+            return "<";
         case e_moreeq:
-            return "e_moreeq";
+            return ">=";
         case e_lesseq:
-            return "e_lesseq";
+            return "<=";
         case e_dot:
-            return "e_dot";
+            return ".";
         case e_arrow:
-            return "e_arrow";
+            return "->";
+        case e_dot_star:
+            return ".*";
+        case e_arrow_star:
+            return "->*";
+        case e_addr:
+            return "&";
         case e_operator:
             return "e_operator";
         case e_preproc_operator:
-            return "e_preproc_operator";
+            return "#";
         default:
             return "Unknown token";
         }

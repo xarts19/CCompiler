@@ -17,6 +17,22 @@ expr* new_binary_op_expr(token* operator) {
     return e;
 }
 
+expr* new_unary_op_expr(token* operator) {
+    expr* e = (expr*)safe_malloc( sizeof(expr) );
+    e->tag = e_unary_op;
+    e->content.unary.oper = operator;
+    e->content.unary.operand = NULL;
+    return e;
+}
+
+expr* new_fnc_call_expr() {
+    expr* e = (expr*)safe_malloc( sizeof(expr) );
+    e->tag = e_fnc_call;
+    e->content.fnc_call.fnc = NULL;
+    e->content.unary.operand = NULL;
+    return e;
+}
+
 expr_list* new_expr_list(expr* elem) {
     expr_list* e = (expr_list*)safe_malloc( sizeof(expr_list) );
     e->elem = elem;
@@ -56,15 +72,6 @@ stmt* new_if_stmt(expr* cond, stmt* body, stmt* alter) {
     return e;
 }
 
-stmt* new_assign_stmt(token* lvalue, token* oper, expr* rvalue) {
-    stmt* e = (stmt*)safe_malloc( sizeof(stmt) );
-    e->tag = e_assign_stmt;
-    e->content._assign.l_value = lvalue;
-    e->content._assign.oper = oper;
-    e->content._assign.r_value = rvalue;
-    return e;
-}
-
 stmt* new_declare_stmt(token* type, token* var) {
     stmt* e = (stmt*)safe_malloc( sizeof(stmt) );
     e->tag = e_declare_stmt;
@@ -92,6 +99,11 @@ void expr_delete(expr* tree) {
             break;
         case e_unary_op:
             expr_delete(tree->content.unary.operand);
+            free(tree);
+            break;
+        case e_fnc_call:
+            expr_delete(tree->content.fnc_call.fnc);
+            expr_list_delete(tree->content.fnc_call.params);
             free(tree);
             break;
     }
@@ -126,10 +138,6 @@ void stmt_delete(stmt* tree) {
             stmt_delete(tree->content._if.alter);
             free(tree);
             break;
-        case e_assign_stmt:
-            expr_delete(tree->content._assign.r_value);
-            free(tree);
-            break;
         case e_declare_stmt:
             free(tree);
             break;
@@ -143,31 +151,44 @@ void block_delete(block* tree){
     }
 }
 
-void expr_print(expr* tree) {
-    int depth = 0;
-    expr_print_work(tree, depth);
-}
-
 void expr_print_work(expr* tree, int depth) {
     if (tree == NULL) return;
-    for (int i=0; i<depth; i++) printf("| ");
+    for (int i=0; i<depth-1; i++) printf("| ");
+    printf("->");
     switch (tree->tag) {
         case e_value_exp:
             token_print(tree->content.value);
             printf("\n");
             break;
         case e_binary_op:
-            token_print(tree->content.value);
+            token_print(tree->content.binary.oper);
             printf("\n");
             expr_print_work(tree->content.binary.left, depth+1);
             expr_print_work(tree->content.binary.right, depth+1);
             break;
         case e_unary_op:
-            token_print(tree->content.value);
+            token_print(tree->content.unary.oper);
             printf("\n");
             expr_print_work(tree->content.unary.operand, depth+1);
             break;
+        case e_fnc_call:
+            printf("CALL:\n");
+            expr_print_work(tree->content.fnc_call.fnc, depth+1);
+            expr_list_print_work(tree->content.fnc_call.params, depth+1);
+            break;
     }
+}
+
+void expr_list_print_work(expr_list* tree, int depth) {
+    if (tree == NULL) return;
+    for (int i=0; i<depth; i++) printf("| ");
+    printf("(\n");
+    while (tree != NULL) {
+        expr_print_work(tree->elem, depth+1);
+        tree = tree->next;
+    }
+    for (int i=0; i<depth; i++) printf("| ");
+    printf(")\n");
 }
 
 void block_print(block* tree) {
@@ -214,14 +235,6 @@ void stmt_print_work(stmt* tree, int depth) {
             for (int i=0; i<depth; i++) printf("| ");
             printf("else:\n");
             stmt_print_work(tree->content._if.alter, depth+1);
-            break;
-        case e_assign_stmt:
-            for (int i=0; i<depth; i++) printf("| ");
-            printf("Assign: ");
-            token_print(tree->content._assign.oper);
-            token_print(tree->content._assign.l_value);
-            printf(" to \n");
-            expr_print_work(tree->content._assign.r_value, depth+1);
             break;
         case e_declare_stmt:
             for (int i=0; i<depth; i++) printf("| ");

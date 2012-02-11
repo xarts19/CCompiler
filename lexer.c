@@ -361,7 +361,7 @@ token* scan_operator(buffered_reader *file_reader) {
                 case '+':
                     br_get_next_char(file_reader);
                     strcpy(buf, "++");
-                    token_t = e_incr;
+                    token_t = e_incr_pre;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
@@ -379,16 +379,22 @@ token* scan_operator(buffered_reader *file_reader) {
                 case '-':
                     br_get_next_char(file_reader);
                     strcpy(buf, "--");
-                    token_t = e_decr;
+                    token_t = e_decr_pre;
                     break;
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "-=");
                     break;
                 case '>':
-                    br_get_next_char(file_reader);
-                    strcpy(buf, "->");
-                    token_t = e_arrow;
+                    forward = br_get_next_char(file_reader);
+                    if (*forward == '*') {
+                        br_get_next_char(file_reader);
+                        strcpy(buf, "->*");
+                        token_t = e_arrow_star;
+                    } else {
+                        strcpy(buf, "->");
+                        token_t = e_arrow;
+                    }
                     break;
                 default:
                     strcpy(buf, "-");
@@ -529,6 +535,7 @@ token* scan_operator(buffered_reader *file_reader) {
                     break;
                 default:
                     strcpy(buf, "&");
+                    token_t = e_addr;
                     break;
             }
             break;
@@ -566,9 +573,15 @@ token* scan_operator(buffered_reader *file_reader) {
             strcpy(buf, "~");
             break;
         case '.':
-            br_get_next_char(file_reader);
-            strcpy(buf, ".");
-            token_t = e_dot;
+            forward = br_get_next_char(file_reader);
+            if (*forward == '*') {
+                br_get_next_char(file_reader);
+                strcpy(buf, ".*");
+                token_t = e_dot_star;
+            } else {
+                strcpy(buf, ".");
+                token_t = e_dot;
+            }
             break;
         case ',':
             br_get_next_char(file_reader);
