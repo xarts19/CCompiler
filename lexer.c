@@ -120,6 +120,10 @@ void reserve_keywords(map *words) {
     map_insert(words, "typedef", token_new(e_typedef, "typedef"));
     map_insert(words, "struct", token_new(e_struct, "struct"));
     map_insert(words, "enum", token_new(e_enum, "enum"));
+    map_insert(words, "return", token_new(e_return, "return"));
+    map_insert(words, "break", token_new(e_break, "break"));
+    map_insert(words, "continue", token_new(e_continue, "continue"));
+    map_insert(words, "sizeof", token_new(e_sizeof, "sizeof"));
 
     map_insert(words, "int", token_new(e_type, "int"));
     map_insert(words, "char", token_new(e_type, "char"));
@@ -610,6 +614,7 @@ token* scan_operator(buffered_reader *file_reader) {
             break;
         case '?':
             br_get_next_char(file_reader);
+            token_t = e_question;
             strcpy(buf, "?");
             break;
         case '(':

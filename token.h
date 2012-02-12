@@ -20,6 +20,7 @@ typedef enum token_type_enum {
     e_semicolon        = 7,       /* ; */
     e_colon            = 8,       /* : */
     e_comma            = 9,       /* , */
+    e_question         =10,       /* ? */
 
     /* keywords */
     e_while            =20,
@@ -33,6 +34,10 @@ typedef enum token_type_enum {
     e_typedef          =28,
     e_struct           =29,
     e_enum             =30,
+    e_return           =31,
+    e_break            =32,
+    e_continue         =33,
+    e_sizeof           =34,
 
     /* semantic */
     e_number           =40,     /* 14, 4.6, 3.5E-23, ... */

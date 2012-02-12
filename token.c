@@ -30,45 +30,51 @@ char* token_type_str(token_type id) {
         case e_eof:
             return "End of file";
         case e_open_paren:
-            return "e_open_paren";
+            return "(";
         case e_close_paren:
-            return "e_close_paren";
+            return ")";
         case e_open_curly:
-            return "e_open_curly";
+            return "{";
         case e_close_curly:
-            return "e_close_curly";
+            return "}";
         case e_open_bracket:
-            return "e_open_bracket";
+            return "[";
         case e_close_bracket:
-            return "e_close_bracket";
+            return "]";
         case e_semicolon:
-            return "e_semicolon";
+            return ";";
         case e_colon:
-            return "e_colon";
+            return ":";
         case e_comma:
-            return "e_comma";
+            return ",";
         case e_while:
-            return "e_while";
+            return "while";
         case e_for:
-            return "e_for";
+            return "for";
         case e_if:
-            return "e_if";
+            return "if";
         case e_then:
-            return "e_then";
+            return "then";
         case e_else:
-            return "e_else";
+            return "else";
         case e_do:
-            return "e_do";
+            return "do";
         case e_switch:
-            return "e_switch";
+            return "switch";
         case e_case:
-            return "e_case";
+            return "case";
         case e_typedef:
-            return "e_typedef";
+            return "typedef";
         case e_struct:
-            return "e_struct";
+            return "struct";
         case e_enum:
-            return "e_enum";
+            return "enum";
+        case e_return:
+            return "return";
+        case e_break:
+            return "break";
+        case e_continue:
+            return "continue";
         case e_number:
             return "e_number";
         case e_literal:
@@ -98,35 +104,35 @@ char* token_type_str(token_type id) {
         case e_void:
             return "e_void";
         case e_assign:
-            return "e_assign";
+            return "=";
         case e_plus:
-            return "e_plus";
+            return "+";
         case e_minus:
-            return "e_minus";
+            return "-";
         case e_mult:
-            return "e_mult";
+            return "*";
         case e_div:
-            return "e_div";
+            return "/";
         case e_mod:
-            return "e_mod";
+            return "%";
         case e_incr_pre:
-            return "e_incr_pre";
+            return "++(prefix)";
         case e_decr_pre:
-            return "e_decr_pre";
+            return "--(prefix)";
         case e_incr_post:
-            return "e_incr_post";
+            return "++(postfix)";
         case e_decr_post:
-            return "e_decr_post";
+            return "--(postfix)";
         case e_not:
-            return "e_not";
+            return "!";
         case e_and:
-            return "e_and";
+            return "&&";
         case e_or:
-            return "e_or";
+            return "||";
         case e_eq:
-            return "e_eq";
+            return "==";
         case e_noteq:
-            return "e_noteq";
+            return "!=";
         case e_more:
             return ">";
         case e_less:

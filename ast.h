@@ -3,7 +3,7 @@
 
 #include "token.h"
 
-typedef enum { e_value_exp, e_binary_op, e_unary_op, e_fnc_call } enum_expr_tag;
+typedef enum { e_value_exp, e_binary_op, e_unary_op, e_ternary_op, e_fnc_call } enum_expr_tag;
 
 typedef struct expr_tag {
     enum_expr_tag tag;
@@ -14,8 +14,12 @@ typedef struct expr_tag {
                  struct expr_tag*  right; }     binary;
         struct { token*            oper;
                  struct expr_tag*  operand; }   unary;
+        struct { token*            oper;
+                 struct expr_tag*  left;
+                 struct expr_tag*  middle;
+                 struct expr_tag*  right;}   ternary;
         struct { struct expr_tag*  fnc;
-                 struct expr_list* params; }     fnc_call;
+                 struct expr_list* params; }    fnc_call;
         } content;
 } expr;
 
@@ -24,8 +28,8 @@ typedef struct expr_list {
     struct expr_list* next;
 } expr_list;
 
-typedef enum { e_block_stmt, e_while_stmt, e_if_stmt,
-               e_expr_stmt, e_declare_stmt } enum_stmt_tag;
+typedef enum { e_block_stmt, e_while_stmt, e_if_stmt, e_expr_stmt,
+               e_declare_stmt, e_return_stmt, e_break_stmt, e_continue_stmt } enum_stmt_tag;
 
 typedef struct stmt_tag {
     enum_stmt_tag tag;
@@ -39,6 +43,7 @@ typedef struct stmt_tag {
                  struct stmt_tag* alter; }   _if;
         struct { token*           type;
                  token*           var; }     _declare;
+        expr*                                _return;
     } content;
 } stmt;
 
@@ -50,6 +55,7 @@ typedef struct block {
 expr* new_value_expr(token* value);
 expr* new_binary_op_expr(token* operator);
 expr* new_unary_op_expr(token* operator);
+expr* new_ternary_op_expr(token* operator);
 expr* new_fnc_call_expr();
 expr_list* new_expr_list(expr* elem);
 
@@ -58,6 +64,9 @@ stmt* new_block_stmt(block* elem);
 stmt* new_while_stmt(expr* cond, stmt* body);
 stmt* new_if_stmt(expr* cond, stmt* body, stmt* alter);
 stmt* new_declare_stmt(token* type, token* var);
+stmt* new_return_stmt(expr* elem);
+stmt* new_break_stmt();
+stmt* new_continue_stmt();
 block* new_block(stmt* elem);
 
 void expr_delete(expr* tree);

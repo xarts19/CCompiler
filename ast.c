@@ -25,6 +25,14 @@ expr* new_unary_op_expr(token* operator) {
     return e;
 }
 
+expr* new_ternary_op_expr(token* operator) {
+    expr* e = (expr*)safe_malloc( sizeof(expr) );
+    e->tag = e_ternary_op;
+    e->content.ternary.oper = operator;
+    return e;
+}
+
+
 expr* new_fnc_call_expr() {
     expr* e = (expr*)safe_malloc( sizeof(expr) );
     e->tag = e_fnc_call;
@@ -80,6 +88,25 @@ stmt* new_declare_stmt(token* type, token* var) {
     return e;
 }
 
+stmt* new_return_stmt(expr* elem) {
+    stmt* e = (stmt*)safe_malloc( sizeof(stmt) );
+    e->tag = e_return_stmt;
+    e->content._return = elem;
+    return e;
+}
+
+stmt* new_break_stmt() {
+    stmt* e = (stmt*)safe_malloc( sizeof(stmt) );
+    e->tag = e_break_stmt;
+    return e;
+}
+
+stmt* new_continue_stmt() {
+    stmt* e = (stmt*)safe_malloc( sizeof(stmt) );
+    e->tag = e_continue_stmt;
+    return e;
+}
+
 block* new_block(stmt* elem) {
     block* e = (block*)safe_malloc( sizeof(block) );
     e->elem = elem;
@@ -99,6 +126,12 @@ void expr_delete(expr* tree) {
             break;
         case e_unary_op:
             expr_delete(tree->content.unary.operand);
+            free(tree);
+            break;
+        case e_ternary_op:
+            expr_delete(tree->content.ternary.left);
+            expr_delete(tree->content.ternary.middle);
+            expr_delete(tree->content.ternary.right);
             free(tree);
             break;
         case e_fnc_call:
@@ -141,6 +174,16 @@ void stmt_delete(stmt* tree) {
         case e_declare_stmt:
             free(tree);
             break;
+        case e_return_stmt:
+            expr_delete(tree->content._return);
+            free(tree);
+            break;
+        case e_break_stmt:
+            free(tree);
+            break;
+        case e_continue_stmt:
+            free(tree);
+            break;
     }
 }
 
@@ -153,7 +196,7 @@ void block_delete(block* tree){
 
 void expr_print_work(expr* tree, int depth) {
     if (tree == NULL) return;
-    for (int i=0; i<depth-1; i++) printf("| ");
+    for (int i=0; i<depth; i++) printf("| ");
     printf("->");
     switch (tree->tag) {
         case e_value_exp:
@@ -170,6 +213,13 @@ void expr_print_work(expr* tree, int depth) {
             token_print(tree->content.unary.oper);
             printf("\n");
             expr_print_work(tree->content.unary.operand, depth+1);
+            break;
+        case e_ternary_op:
+            token_print(tree->content.ternary.oper);
+            printf("\n");
+            expr_print_work(tree->content.ternary.left, depth+1);
+            expr_print_work(tree->content.ternary.middle, depth+1);
+            expr_print_work(tree->content.ternary.right, depth+1);
             break;
         case e_fnc_call:
             printf("CALL:\n");
@@ -242,6 +292,16 @@ void stmt_print_work(stmt* tree, int depth) {
             token_print(tree->content._declare.type);
             token_print(tree->content._declare.var);
             printf("\n");
+            break;
+        case e_return_stmt:
+            printf("Return:\n");
+            expr_print_work(tree->content._expr, depth);
+            break;
+        case e_break_stmt:
+            printf("Break\n");
+            break;
+        case e_continue_stmt:
+            printf("Continue\n");
             break;
     }
 }
