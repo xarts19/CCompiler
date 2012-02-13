@@ -59,9 +59,6 @@ bucket* new_bucket(const char* key, void* value) {
     return b;
 }
 
-/*
- * Return value for key from map or NULL if not found.
- */
 void* map_find(map *m, const char *key) {
     /* Simple linear search for now */
     int offset = compute_hash(key, m->total_buckets);

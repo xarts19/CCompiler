@@ -1,45 +1,47 @@
 #include "s_table.h"
 
-s_table s_table_new(s_table *parent) {
-    s_pair* pairs = (s_pair*)safe_malloc(sizeof(s_pair)*START_STRUCTURES_SIZE);
-    s_table t;
-    t.parent = parent;
-    t.size = 0;
-    t.allocated = START_STRUCTURES_SIZE;
-    t.pairs = pairs;
+symbol* symbol_new(const char* data) {
+    symbol *s = (symbol*)safe_malloc(sizeof(symbol));
+    char *str = (char*)safe_malloc(sizeof(char)*strlen(data)+1);
+    strcpy(str, data);
+    s->data = str;
+    return s;
+}
+
+void symbol_delete(symbol* s) {
+    free(s->data);
+    free(s);
+}
+
+symbol* symbol_copy(const symbol* s) {
+    symbol *new_s = (symbol*)safe_malloc(sizeof(symbol));
+    char *str = (char*)safe_malloc(sizeof(char)*strlen(s->data)+1);
+    strcpy(str, s->data);
+    new_s->data = str;
+    return new_s;
+}
+
+
+s_table* s_table_new(s_table* parent) {
+    s_table* t = (s_table*)safe_malloc(sizeof(s_table));
+    t->parent = parent;
+    t->table = map_new(10);
     return t;
 }
 
-void s_table_delete(s_table *t) {
-    for (int i=0; i<t->size; i++) {
-        free(t->pairs[i].key);
-        symbol_delete(t->pairs[i].value);
-    }
-    free(t->pairs);
+static void hlp_delete_symbol(void* sym) {
+    symbol_delete( (symbol*)sym );
+}
+void s_table_delete(s_table* t) {
+    map_delete(t->table, hlp_delete_symbol);
+    free(t);
 }
 
-void s_table_insert(s_table *t, const char *key, symbol *value) {
-    if (t->size == t->allocated) {
-        t->allocated *= 2;
-        t->pairs = (s_pair*)safe_realloc(t->pairs, sizeof(s_pair)*t->allocated);
-    }
-    s_pair p;
-    char* str = (char*)safe_malloc(sizeof(char)*strlen(key)+1);
-    strcpy(str, key);
-    p.key = str;
-    p.value = symbol_copy(value);
-    t->pairs[t->size++] = p;
+void s_table_insert(s_table* t, const char* key, symbol* value) {
+    map_insert(t->table, key, value);
 }
 
-symbol* s_table_find(s_table *t, const char *key) {
+symbol* s_table_find(s_table* t, const char* key) {
     /* search parent scopes if not found in current scope */
-    for (s_table *env = t; env != NULL; env = env->parent) {
-        /* simple linear search for now */
-        for (int i=0; i<env->size; i++) {
-            if (strcmp(env->pairs[i].key, key) == 0) {
-                return env->pairs[i].value;
-            }
-        }
-    }
-    return NULL;
+    return (symbol*)map_find(t->table, key);
 }

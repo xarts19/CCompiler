@@ -682,7 +682,7 @@ token* scan_comment(buffered_reader *file_reader) {
                 br_get_next_char(file_reader);
                 br_set_base(file_reader);
                 /* end of multiline comment */
-                return token_new(e_comment, "multiline");
+                return token_new(e_comment, "multiline comment");
             case 5:
                 forward = br_get_next_char(file_reader);
                 if (*forward == '\n') state = 6;
@@ -692,7 +692,7 @@ token* scan_comment(buffered_reader *file_reader) {
                 forward = br_get_next_char(file_reader);
                 br_set_base(file_reader);
                 /* end of single-line comment */
-                return token_new(e_comment, "single-line");
+                return token_new(e_comment, "single-line comment");
         }
         if (*forward == UNIX_EOF)
             return error("EOF while scanning comment", "");

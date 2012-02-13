@@ -38,6 +38,8 @@ void map_delete(map *m, void (*delete)(void*));
 
 /* usual map operations */
 void map_insert(map* m, const char* key, void* value);
+
+/* Return value for key from map or NULL if not found. */
 void* map_find(map* m, const char* key);
 void map_remove(map* m, const char* key);
 
