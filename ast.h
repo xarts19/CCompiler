@@ -17,7 +17,7 @@ typedef struct expr_tag {
         struct { token*            oper;
                  struct expr_tag*  left;
                  struct expr_tag*  middle;
-                 struct expr_tag*  right;}   ternary;
+                 struct expr_tag*  right; }     ternary;
         struct { struct expr_tag*  fnc;
                  struct expr_list* params; }    fnc_call;
         } content;

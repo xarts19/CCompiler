@@ -1,5 +1,5 @@
 #ODIR=obj
-CC=gcc
+CC=clang
 CFLAGS=-Wall -Wextra -pedantic -fPIC --std=c99 -g
 
 MAIN=main.out
