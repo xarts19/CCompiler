@@ -18,14 +18,14 @@
 #define MAX_LITERAL_LENGTH 255
 #define OPERATOR_LENGTH 3
 
-void lexer(buffered_reader *file_reader, vector* tokens, map* words);
+void lexer(buffered_reader *file_reader, vector *tokens, map *words);
 void reserve_keywords(map *words);
 
 /* DFAs for each token type */
-token* scan_number(buffered_reader *file_reader);
-token* scan_word(buffered_reader *file_reader);
-token* scan_literal(buffered_reader *file_reader);
-token* scan_operator(buffered_reader *file_reader);
-token* scan_comment(buffered_reader *file_reader);
+token *scan_number(buffered_reader *file_reader);
+token *scan_word(buffered_reader *file_reader);
+token *scan_literal(buffered_reader *file_reader);
+token *scan_operator(buffered_reader *file_reader);
+token *scan_comment(buffered_reader *file_reader);
 
 #endif

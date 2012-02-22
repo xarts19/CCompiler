@@ -3,10 +3,10 @@
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
 
-static token* error(const char* message, const char* param);
+static token *error(const char *message, const char *param);
 
 /* Scan input string, emit array of lexical tokens */
-void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
+void lexer(buffered_reader *file_reader, vector *tokens, map *words) {
     /* identifiers and reserved keywords */
     reserve_keywords(words);
 
@@ -14,7 +14,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
     int line = 0;
     printf("\n%3d ", line++);
 
-    token* cur_token = NULL;
+    token *cur_token = NULL;
     /* read first character */
     char *forward = br_get_start(file_reader);
     bool finished = false;
@@ -26,8 +26,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
                 finished = true;
                 break;
 
-            case ' ':
-            case '\t':
+            case ' ': case '\t': case '\r':
                 /* if it's a whitespace */
                 forward = br_get_next_char(file_reader);
                 br_set_base(file_reader);
@@ -50,8 +49,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
                 vector_push(tokens, cur_token);
                 break;
 
-            case '"':
-            case '\'':
+            case '"': case '\'':
                 /* literal (const string) */
                 cur_token = scan_literal(file_reader);
                 assert(cur_token != NULL);
@@ -70,7 +68,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
                     cur_token = scan_word(file_reader);
                     assert(cur_token != NULL);
                     /* search for matching word in map */
-                    token* word = (token*)map_find(words, cur_token->data);
+                    token *word = (token*)map_find(words, cur_token->data);
                     /* if word that was read is reserved */
                     if (word != NULL) {
                         /* add it to tokens */
@@ -93,7 +91,7 @@ void lexer(buffered_reader *file_reader, vector* tokens, map* words) {
 
         /* print tokens as they are parsed */
         if (tokens->size > num_tokens) {
-            token* t = (token*)tokens->elements[tokens->size-1];
+            token *t = (token*)tokens->elements[tokens->size-1];
             token_print(t);
             ++num_tokens;
         }
@@ -133,11 +131,11 @@ void reserve_keywords(map *words) {
  * Scan string for int and float numbers.
  * Return pointer to the last symbol of the number.
  */
-token* scan_number(buffered_reader *file_reader) {
+token *scan_number(buffered_reader *file_reader) {
     char buf[MAX_NUMBER_LENGTH+1];
     int size = 0;
     int state = 0;
-    char* forward = br_get_base(file_reader);
+    char *forward = br_get_base(file_reader);
     while (1) {
         switch (state) {
             case 0:
@@ -221,11 +219,11 @@ token* scan_number(buffered_reader *file_reader) {
  * Scan string for identifiers and reserved keywords.
  * Return pointer to the last symbol of the word.
  */
-token* scan_word(buffered_reader *file_reader) {
+token *scan_word(buffered_reader *file_reader) {
     char buf[MAX_ID_LENGTH+1];
     int size = 0;
     int state = 0;
-    char* forward = br_get_base(file_reader);
+    char *forward = br_get_base(file_reader);
     while (1) {
         switch (state) {
             case 0:
@@ -256,11 +254,11 @@ token* scan_word(buffered_reader *file_reader) {
  * Scan for constant strings of text.
  * Return pointer to the last symbol of the literal.
  */
-token* scan_literal(buffered_reader *file_reader) {
+token *scan_literal(buffered_reader *file_reader) {
     char buf[MAX_LITERAL_LENGTH+1];
     int size = 0;
     int state = 0;
-    char* forward = br_get_base(file_reader);
+    char *forward = br_get_base(file_reader);
     while (1) {
         switch (state) {
             case 0:
@@ -353,10 +351,10 @@ token* scan_literal(buffered_reader *file_reader) {
  * Scan for various operators.
  * Return pointer to the last symbol of the operator.
  */
-token* scan_operator(buffered_reader *file_reader) {
+token *scan_operator(buffered_reader *file_reader) {
     char buf[OPERATOR_LENGTH+1];
     token_type token_t = e_operator;
-    char* forward = br_get_base(file_reader);
+    char *forward = br_get_base(file_reader);
 
     switch (*forward) {
         case '+':
@@ -654,9 +652,9 @@ token* scan_operator(buffered_reader *file_reader) {
 
 
 /* returns pointer to the comment token */
-token* scan_comment(buffered_reader *file_reader) {
+token *scan_comment(buffered_reader *file_reader) {
     int state = 0;
-    char* forward = br_get_base(file_reader);
+    char *forward = br_get_base(file_reader);
     while (1) {
         switch (state) {
             case 0:
@@ -702,7 +700,7 @@ token* scan_comment(buffered_reader *file_reader) {
     return NULL;
 }
 
-token* error(const char *message, const char *param) {
+token *error(const char *message, const char *param) {
     printf("In file \"%s\": line %d\n", current_file, current_line-1);
     printf("Compile error: %s%s\n", message, param);
     exit(EXIT_FAILURE);

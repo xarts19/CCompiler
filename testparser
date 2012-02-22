@@ -21,3 +21,6 @@ a.*b->*v;
 sizeof(int);
 sizeof(1+2);
 sizeof x;
+int* x;
+int *x[2];
+int** x[5][7];

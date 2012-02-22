@@ -9,13 +9,14 @@
 #include "token.h"
 #include "reader.h"
 #include "parser.h"
+#include "preprocessor.h"
 
 
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
 
 /* helper function for deleting tokens inside vector and map */
-void hlp_delete_token(void* t) {
+void hlp_delete_token(void *t) {
     token_delete( (token*) t );
 }
 
@@ -25,11 +26,13 @@ void compile(char *input_file_name) {
     buffered_reader *file_reader = br_open_file(input_file_name);
 
     /* lexical tokens */
-    vector* tokens = vector_new(START_STRUCTURES_SIZE);
-    map* words = map_new(START_STRUCTURES_SIZE);
+    vector *tokens = vector_new(START_STRUCTURES_SIZE);
+    map *words = map_new(START_STRUCTURES_SIZE);
     printf(">>> Tokens ===========================\n");
     lexer(file_reader, tokens, words);
     printf("\n");
+
+    preprocess(tokens);
 
     parse_topdown(tokens);
     //parse_bottomup(tokens);

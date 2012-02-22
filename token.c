@@ -4,28 +4,28 @@
 
 extern int current_line;
 
-token* token_new(token_type id, const char* data) {
-    token* t = (token*)safe_malloc(sizeof(token));
+token *token_new(token_type id, const char *data) {
+    token *t = (token*)safe_malloc(sizeof(token));
     t->id = id;
-    char* str = (char*)safe_malloc( 1 + strlen(data) * sizeof(char) );
+    char *str = (char*)safe_malloc( 1 + strlen(data) * sizeof(char) );
     strcpy(str, data);
     t->data = str;
     t->line = current_line;
     return t;
 }
 
-void token_delete(token* t) {
+void token_delete(token *t) {
     assert(t != NULL);
     free(t->data);
     free(t);
 }
 
-token* token_copy(const token* t) {
+token *token_copy(const token *t) {
     assert(t != NULL);
     return token_new(t->id, t->data);
 }
 
-char* token_type_str(token_type id) {
+char *token_type_str(token_type id) {
     switch (id) {
         case e_eof:
             return "End of file";
@@ -160,7 +160,7 @@ char* token_type_str(token_type id) {
         }
 }
 
-void token_print(token* t) {
+void token_print(token *t) {
     assert(t != NULL);
     printf("[ %s ] ", t->data);
 }

@@ -12,9 +12,9 @@
 #define FILE_BUFFER_SIZE 4096
 #define UNIX_EOF 4    /* ASCII 0x04 (Control-D) */
 
-void* safe_malloc(size_t size);
-void* safe_realloc(void *old, size_t size);
-void FatalError(const char* message);
-void InputError(const char* message, const char* filename);
+void *safe_malloc(size_t size);
+void *safe_realloc(void *old, size_t size);
+void FatalError(const char *message);
+void InputError(const char *message, const char *filename);
 
 #endif

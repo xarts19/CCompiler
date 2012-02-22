@@ -31,8 +31,8 @@ static int num_symbols;
 static int num_states;
 static int num_rules;
 
-static vector* tokens;
-static int index;
+vector* tokens;
+int index;
 
 void read_mapping() {
     FILE* pfile = fopen(MAPPING_FILENAME, "r");
