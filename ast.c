@@ -232,54 +232,56 @@ void type_tree_delete(type_tree *tree) {
 }
 
 void expr_print(expr *tree, int depth) {
-    for (int i=0; i<depth; i++) printf("   ");
     if (tree == NULL) {
-        printf("*NULL*\n");
+        printf(" *None* ");
         return;
     }
     switch (tree->tag) {
         case e_value_exp:
             token_print(tree->content.value);
-            printf("\n");
             break;
         case e_binary_op:
-            token_print(tree->content.binary.oper);
-            printf("\n");
+            printf(" (");
             expr_print(tree->content.binary.left, depth+1);
+            token_print(tree->content.binary.oper);
             expr_print(tree->content.binary.right, depth+1);
+            printf(") ");
             break;
         case e_unary_op:
+            printf(" (");
             token_print(tree->content.unary.oper);
-            printf("\n");
             expr_print(tree->content.unary.operand, depth+1);
+            printf(") ");
             break;
         case e_ternary_op:
-            token_print(tree->content.ternary.oper);
-            printf("\n");
+            printf(" (");
             expr_print(tree->content.ternary.left, depth+1);
+            token_print(tree->content.ternary.oper);
             expr_print(tree->content.ternary.middle, depth+1);
+            token_print(tree->content.ternary.oper);
             expr_print(tree->content.ternary.right, depth+1);
+            printf(") ");
             break;
         case e_fnc_call:
-            printf("CALL:\n");
+            printf(" ");
             expr_print(tree->content.fnc_call.fnc, depth+1);
             expr_list_print(tree->content.fnc_call.params, depth+1);
+            printf(" ");
             break;
     }
 }
 
 void expr_list_print(expr_list *tree, int depth) {
     if (tree == NULL) {
-        for (int i=0; i<depth; i++) printf("   ");
-        printf("*NULL*\n");
+        printf(" *None* ");
         return;
     }
-    for (int i=0; i<depth; i++) printf("   "); printf("(\n");
+    printf("(");
     while (tree != NULL) {
         expr_print(tree->elem, depth+1);
         tree = tree->next;
     }
-    for (int i=0; i<depth; i++) printf("   "); printf(")\n");
+    printf(")");
 }
 
 void block_print(block *tree, int depth) {
@@ -321,14 +323,14 @@ void stmt_print(stmt *tree, int depth) {
             type_tree_print(tree->content._declare.type, depth+1);
             break;
         case e_return_stmt:
-            printf("Return:\n");
+            for (int i=0; i<depth; i++) printf("   "); printf("Return:\n");
             expr_print(tree->content._expr, depth);
             break;
         case e_break_stmt:
-            printf("Break\n");
+            for (int i=0; i<depth; i++) printf("   "); printf("Break\n");
             break;
         case e_continue_stmt:
-            printf("Continue\n");
+            for (int i=0; i<depth; i++) printf("   "); printf("Continue\n");
             break;
         case e_fnc_stmt:
             for (int i=0; i<depth; i++) printf("   "); printf("Function ");

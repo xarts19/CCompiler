@@ -94,6 +94,7 @@ stmt *Stmt() {
     } else if ( t->id == e_return ) {
         advance_token();
         s = new_return_stmt( Expr() );
+        match(e_semicolon);
         return s;
     } else if ( t->id == e_break ) {
         advance_token();
@@ -166,6 +167,7 @@ stmt *Stmt_if() {
  */
 stmt *Stmt_declare(bool in_fnc_prototype) {
     /* fnc prototype allows no identifier and has no semicolons */
+    bool fnc_definition = false;
     stmt *tree = NULL;
     type_tree *type = TYPE();
     token *var = NULL;
@@ -183,6 +185,7 @@ stmt *Stmt_declare(bool in_fnc_prototype) {
         block *args = Decl_list();
         block *body = NULL;
         if (cur_token()->id == e_open_curly) {
+            fnc_definition = true;
             body = Stmt_block();
         }
         tree = new_fnc_stmt(var, type, args, body);
@@ -191,7 +194,7 @@ stmt *Stmt_declare(bool in_fnc_prototype) {
         type = (array_type ? array_type : type);
         tree = new_declare_stmt(type, var);
     }
-    if (!in_fnc_prototype)
+    if (!in_fnc_prototype && !fnc_definition)
         match(e_semicolon);
     return tree;
 }
