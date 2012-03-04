@@ -24,3 +24,14 @@ sizeof x;
 int* x;
 int *x[2];
 int** x[5][7];
+abs(a, b);
+arlfg(1+2);
+a();
+int id[20][19];
+int arr[];
+a();
+{1;}
+int myfnc(char a, float arr[30]);
+int mult(int a, int b) {
+    return a * b;
+}

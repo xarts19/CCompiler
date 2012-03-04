@@ -37,10 +37,11 @@ static block *Stmt_block();
 static stmt *Stmt_while();
 static stmt *Stmt_if();
 
-static stmt *Stmt_declare();
+static stmt *Stmt_declare(bool in_fnc_prototype);
 type_tree *TYPE();
 int PTR();
 type_tree *ARRAY_DECL(type_tree *type);
+static block *Decl_list();
 
 static token *cur_token();
 static void advance_token();
@@ -79,17 +80,20 @@ stmt *Stmt() {
     if ( t->id == e_eof) {
         return NULL;
     } else if ( t->id == e_open_curly ) {
+        /* statement block */
         return new_block_stmt( Stmt_block() );
     } else if ( t->id == e_while ) {
+        /* while loop */
         return Stmt_while();
     } else if ( t->id == e_if ) {
+        /* if stmt */
         return Stmt_if();
     } else if ( t->id == e_type ) {
-        return Stmt_declare();
+        /* declaration */
+        return Stmt_declare(false);
     } else if ( t->id == e_return ) {
         advance_token();
         s = new_return_stmt( Expr() );
-        match(e_semicolon);
         return s;
     } else if ( t->id == e_break ) {
         advance_token();
@@ -157,15 +161,39 @@ stmt *Stmt_if() {
     return new_if_stmt(cond, body, alter);
 }
 
-/* STMT -> TYPE id ARRAY_DECL ; */
-stmt *Stmt_declare() {
+/* STMT -> TYPE [ id ] ARRAY_DECL [ ; ] 
+ * STMT -> TYPE [ id ] ( DECLAR, DECLAR, ... ) FNC_TAIL
+ */
+stmt *Stmt_declare(bool in_fnc_prototype) {
+    /* fnc prototype allows no identifier and has no semicolons */
+    stmt *tree = NULL;
     type_tree *type = TYPE();
-    token *var = cur_token();
-    match(e_identifier);
-    type_tree *array_type = ARRAY_DECL(type);
-    match(e_semicolon);
-    type = (array_type ? array_type : type);
-    return new_declare_stmt(type, var);
+    token *var = NULL;
+    if (in_fnc_prototype) {
+        if (cur_token()->id == e_identifier) {
+            var = cur_token();
+            advance_token();
+        }
+    } else {
+        var = cur_token();
+        match(e_identifier);
+    }
+    if (cur_token()->id == e_open_paren) {
+        /* fucntion declaration */
+        block *args = Decl_list();
+        block *body = NULL;
+        if (cur_token()->id == e_open_curly) {
+            body = Stmt_block();
+        }
+        tree = new_fnc_stmt(var, type, args, body);
+    } else {
+        type_tree *array_type = ARRAY_DECL(type);
+        type = (array_type ? array_type : type);
+        tree = new_declare_stmt(type, var);
+    }
+    if (!in_fnc_prototype)
+        match(e_semicolon);
+    return tree;
 }
 
 /* TYPE -> e_type PTR */
@@ -191,10 +219,15 @@ int PTR() {
 
 /* ARRAY_DECL -> [ EXPR ] ARRAY_DECL | e */
 type_tree *ARRAY_DECL(type_tree *type) {
-    if (cur_token()-> id == e_open_bracket) {
+    if (cur_token()->id == e_open_bracket) {
         advance_token();
         type_tree *tree = new_type_tree(e_array_type);
-        tree->content.array_expr.size = Expr();
+        if (cur_token()->id == e_close_bracket) {
+            /* no array size */
+            tree->content.array_expr.size = NULL;
+        } else {
+            tree->content.array_expr.size = Expr();
+        }
         tree->content.array_expr.type = type;
         match(e_close_bracket);
         type_tree *tail = ARRAY_DECL(tree);
@@ -202,8 +235,6 @@ type_tree *ARRAY_DECL(type_tree *type) {
     } else
         return NULL;
 }
-
-//------------------------------------------------------------
 
 /* EXPR -> lvl16' */
 expr *Expr() {
@@ -455,7 +486,6 @@ expr *Expr_lvl3_() {
         t = cur_token();
         if (t->id == e_open_paren) {
             advance_token();
-            // TODO: production for type here
             t = cur_token();
             if (t->id == e_type) {
                 tree->content.unary.operand = new_value_expr(cur_token());
@@ -574,6 +604,30 @@ expr_list *Expr_list() {
     return head;
 }
 
+/* DECL_LIST -> (DECL, DECL, ...) */
+block *Decl_list() {
+    match(e_open_paren);
+    if (cur_token()->id == e_close_paren) {
+        advance_token();
+        return NULL;
+    }
+    stmt *e = Stmt_declare(true);
+    block *list = new_block(e);
+    block *head = list;
+    token *t = cur_token();
+    while (t->id != e_close_paren) {
+        match(e_comma);
+        e = Stmt_declare(true);
+        list->next = new_block(e);
+        list = list->next;
+        t = cur_token();
+        if ( t->id == e_eof )
+            return (block*)error("No closing parenthesis", "");
+    }
+    match(e_close_paren);
+    return head;
+}
+
 token *cur_token() {
     if (token_index < tokens->size)
         return (token*)tokens->elements[token_index];
@@ -593,7 +647,7 @@ bool match(token_type type) {
     token *t = cur_token();
     if (t->id != type) {
         char buf[MAX_ERROR_LENTH];
-        sprintf(buf, "Expected \"%s\", but got \"%s\"(\"%s\") instead",
+        sprintf(buf, "Expected \"%s\", but got \"%s\" (\"%s\") instead",
                 token_type_str(type), token_type_str(t->id), t->data);
         error(buf, "");
         return false;
@@ -603,9 +657,10 @@ bool match(token_type type) {
 }
 
 expr *error(const char *message, const char *param) {
-    printf("In file \"%s\": line %d; token: %s(%s)\n", current_file,
+    printf("In file \"%s\": line %d; token: %s (%s)\n", current_file,
             cur_token()->line, token_type_str(cur_token()->id), cur_token()->data);
-    printf("Parser error: %s%s\n", message, param);
+    printf("Parser error: %s %s\n", message, param);
     exit(EXIT_FAILURE);
     return NULL;
 }
+

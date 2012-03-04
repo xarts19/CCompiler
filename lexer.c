@@ -125,6 +125,10 @@ void reserve_keywords(map *words) {
 
     map_insert(words, "int", token_new(e_type, "int"));
     map_insert(words, "char", token_new(e_type, "char"));
+    map_insert(words, "long", token_new(e_type, "long"));
+    map_insert(words, "float", token_new(e_type, "float"));
+    map_insert(words, "double", token_new(e_type, "double"));
+    map_insert(words, "void", token_new(e_type, "void"));
 }
 
 /*

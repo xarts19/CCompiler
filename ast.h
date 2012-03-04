@@ -41,7 +41,7 @@ typedef struct type_tree_tag {
     } content;
 } type_tree;
 
-typedef enum { e_block_stmt, e_while_stmt, e_if_stmt, e_expr_stmt,
+typedef enum { e_block_stmt, e_while_stmt, e_if_stmt, e_expr_stmt, e_fnc_stmt, 
                e_declare_stmt, e_return_stmt, e_break_stmt, e_continue_stmt } enum_stmt_tag;
 
 typedef struct stmt_tag {
@@ -50,12 +50,16 @@ typedef struct stmt_tag {
         expr                                *_expr;
         struct block                        *_block;
         struct { expr            *cond;
-                 struct stmt_tag *stmt; }    _while;
+                 struct stmt_tag *stmt; }   _while;
         struct { expr            *cond;
                  struct stmt_tag *stmt;
-                 struct stmt_tag *alter; }   _if;
+                 struct stmt_tag *alter; }  _if;
         struct { type_tree       *type;
-                 token           *var; }     _declare;
+                 token           *var; }    _declare;
+        struct { token           *name;
+                 type_tree       *type;
+                 struct block    *args;
+                 struct block    *body; }   _fnc;
         expr                                *_return;
     } content;
 } stmt;
@@ -78,6 +82,7 @@ stmt *new_while_stmt(expr *cond, stmt *body);
 stmt *new_if_stmt(expr *cond, stmt *body, stmt *alter);
 stmt *new_declare_stmt(type_tree *type, token *var);
 type_tree *new_type_tree(enum_type_type type);
+stmt *new_fnc_stmt(token *name, type_tree *type, block *args, block *body);
 stmt *new_return_stmt(expr *elem);
 stmt *new_break_stmt();
 stmt *new_continue_stmt();
@@ -87,6 +92,7 @@ void expr_delete(expr *tree);
 void expr_list_delete(expr_list *tree);
 void stmt_delete(stmt *tree);
 void block_delete(block *tree);
+void type_tree_delete(type_tree *tree);
 
 void expr_print(expr *tree, int depth);
 void expr_list_print(expr_list *tree, int depth);

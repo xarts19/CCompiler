@@ -94,6 +94,16 @@ type_tree *new_type_tree(enum_type_type type) {
     return e;
 }
 
+stmt *new_fnc_stmt(token *name, type_tree *type, block *args, block *body) {
+    stmt *e = (stmt*)safe_malloc( sizeof(stmt) );
+    e->tag = e_fnc_stmt;
+    e->content._fnc.name = name;
+    e->content._fnc.type = type;
+    e->content._fnc.args = args;
+    e->content._fnc.body = body;
+    return e;
+}
+
 stmt *new_return_stmt(expr *elem) {
     stmt *e = (stmt*)safe_malloc( sizeof(stmt) );
     e->tag = e_return_stmt;
@@ -178,7 +188,7 @@ void stmt_delete(stmt *tree) {
             free(tree);
             break;
         case e_declare_stmt:
-            free(tree->content._declare.type);
+            type_tree_delete(tree->content._declare.type);
             free(tree);
             break;
         case e_return_stmt:
@@ -191,19 +201,42 @@ void stmt_delete(stmt *tree) {
         case e_continue_stmt:
             free(tree);
             break;
+        case e_fnc_stmt:
+            type_tree_delete(tree->content._fnc.type);
+            block_delete(tree->content._fnc.args);
+            if (tree->content._fnc.body != NULL) {
+                block_delete(tree->content._fnc.body);
+            }
+            free(tree);
+            break;
     }
 }
 
-void block_delete(block *tree){
+void block_delete(block *tree) {
      while (tree != NULL) {
         stmt_delete(tree->elem);
         tree = tree->next;
     }
 }
 
+void type_tree_delete(type_tree *tree) {
+     if (tree != NULL) {
+        if (tree->tag == e_array_type) {
+            type_tree *t = tree->content.array_expr.type;
+            expr_delete(tree->content.array_expr.size);
+            free(tree);
+            type_tree_delete(t);
+        } else
+            free(tree);
+    }
+}
+
 void expr_print(expr *tree, int depth) {
-    if (tree == NULL) return;
     for (int i=0; i<depth; i++) printf("   ");
+    if (tree == NULL) {
+        printf("*NULL*\n");
+        return;
+    }
     switch (tree->tag) {
         case e_value_exp:
             token_print(tree->content.value);
@@ -236,7 +269,11 @@ void expr_print(expr *tree, int depth) {
 }
 
 void expr_list_print(expr_list *tree, int depth) {
-    if (tree == NULL) return;
+    if (tree == NULL) {
+        for (int i=0; i<depth; i++) printf("   ");
+        printf("*NULL*\n");
+        return;
+    }
     for (int i=0; i<depth; i++) printf("   "); printf("(\n");
     while (tree != NULL) {
         expr_print(tree->elem, depth+1);
@@ -293,6 +330,19 @@ void stmt_print(stmt *tree, int depth) {
         case e_continue_stmt:
             printf("Continue\n");
             break;
+        case e_fnc_stmt:
+            for (int i=0; i<depth; i++) printf("   "); printf("Function ");
+            token_print(tree->content._fnc.name); printf(" :\n");
+
+            for (int i=0; i<depth; i++) printf("   "); printf("Returns:\n");
+            type_tree_print(tree->content._fnc.type, depth+1);
+            for (int i=0; i<depth; i++) printf("   "); printf("Arguments:\n");
+            block_print(tree->content._fnc.args, depth+1);
+            if (tree->content._fnc.body != NULL) {
+                for (int i=0; i<depth; i++) printf("   "); printf("Body:\n");
+                block_print(tree->content._fnc.body, depth+1);
+            }
+
     }
 }
 

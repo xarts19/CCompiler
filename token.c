@@ -161,6 +161,6 @@ char *token_type_str(token_type id) {
 }
 
 void token_print(token *t) {
-    assert(t != NULL);
-    printf("[ %s ] ", t->data);
+    if (t == NULL) printf("[*NULL*] ");
+    else printf("[ %s ] ", t->data);
 }
