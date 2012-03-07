@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 2.8.5)
-project(Ccompiler)
-ADD_DEFINITIONS("-Wall -std=c99 -Wextra -pedantic -fPIC -g")
-include_directories(.)
-add_executable(cc utils.c preprocessor.c reader.c token.c vector.c map.c s_table.c ast.c lexer.c parser.c main.c)
+project(ccompiler)
+SET(CMAKE_C_FLAGS "-std=c99 -g -fPIC -Wall -Wextra -pedantic")
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+SET(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
+SET(SOURCES ${SRC_DIR}/main.c
+            ${SRC_DIR}/ast.c
+            ${SRC_DIR}/lexer.c
+            ${SRC_DIR}/map.c
+            ${SRC_DIR}/parser.c
+            ${SRC_DIR}/preprocessor.c
+            ${SRC_DIR}/reader.c
+            ${SRC_DIR}/s_table.c
+            ${SRC_DIR}/token.c
+            ${SRC_DIR}/utils.c
+            ${SRC_DIR}/vector.c)
+
+add_executable(cc ${SOURCES})
 
