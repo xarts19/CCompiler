@@ -62,7 +62,6 @@ extern int current_line;
 
 static vector *tokens;
 static int token_index;
-static s_table *symtable = NULL;
 
 stmt *parse_topdown(vector *t) {
     tokens = t;

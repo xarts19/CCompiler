@@ -1,23 +1,22 @@
 #include "s_table.h"
 
-symbol *symbol_new(const char *data) {
+symbol *symbol_new(token *id, type_tree *type, int size) {
     symbol *s = (symbol*)safe_malloc(sizeof(symbol));
-    char *str = (char*)safe_malloc(sizeof(char)*strlen(data)+1);
-    strcpy(str, data);
-    s->data = str;
+    s->id = id;
+    s->type = type;
+    s->size = size;
     return s;
 }
 
 void symbol_delete(symbol *s) {
-    free(s->data);
     free(s);
 }
 
 symbol *symbol_copy(const symbol *s) {
     symbol *new_s = (symbol*)safe_malloc(sizeof(symbol));
-    char *str = (char*)safe_malloc(sizeof(char)*strlen(s->data)+1);
-    strcpy(str, s->data);
-    new_s->data = str;
+    new_s->id = s->id;
+    new_s->type = s->type;
+    new_s->size = s->size;
     return new_s;
 }
 

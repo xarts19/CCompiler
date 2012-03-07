@@ -6,9 +6,13 @@
 
 #include "map.h"
 #include "utils.h"
+#include "token.h"
+#include "ast.h"
 
 typedef struct symbol {
-    char *data;
+    token *id;
+    type_tree *type;
+    int size;
 } symbol;
 
 typedef struct s_table {
@@ -17,7 +21,7 @@ typedef struct s_table {
 } s_table;
 
 
-symbol *symbol_new(const char *data);
+symbol *symbol_new(token *id, type_tree *type, int size);
 void symbol_delete(symbol *s);
 symbol *symbol_copy(const symbol *s);
 
