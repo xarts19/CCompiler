@@ -124,6 +124,10 @@ stmt *Stmt() {
 /* STMT -> { BLOCK } */
 block *Stmt_block() {
     match(e_open_curly);
+    if (cur_token()->id == e_close_curly) {
+        advance_token();
+        return NULL;
+    }
     stmt *s = Stmt();
     block *list = new_block(s);
     block *head = list;
@@ -726,7 +730,7 @@ expr *Expr_lvl0() {
     expr *tree;
     token *t = cur_token();
     if (t->id == e_eof) return error("Wrong expression", "");
-    if (t->id == e_number || t->id == e_identifier) {
+    if (t->id == e_number || t->id == e_identifier || t->id == e_literal) {
         advance_token();
         tree = new_value_expr(t);
         return tree;

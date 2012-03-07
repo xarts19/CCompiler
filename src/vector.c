@@ -27,6 +27,15 @@ void vector_insert(vector *v, void *value, int index) {
     v->elements[index] = value;
 }
 
+void vector_erase(vector *v, int index, void (*delete)(void*)) {
+    assert( 0 < index && index < v->size );
+    delete(v->elements[index]);
+    for (int i=index+1; i < v->size; i++) {
+        v->elements[i-1] = v->elements[i];
+    }
+    --(v->size);
+}
+
 void *vector_get(vector *v, int index) {
     return v->elements[index];
 }

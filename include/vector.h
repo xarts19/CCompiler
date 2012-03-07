@@ -44,6 +44,9 @@ void *vector_get(vector *v, int index);
  */
 void vector_insert(vector *v, void *value, int index);
 
+/* Delete element at specified position and shift following
+ * elements to the right */
+void vector_erase(vector *v, int index, void (*delete)(void*));
 
 /*                          */
 /* Stack operations.        */

@@ -10,7 +10,7 @@
 #include "reader.h"
 #include "parser.h"
 #include "preprocessor.h"
-
+#include "ast.h"
 
 extern char current_file[MAX_FILE_NAME_LENGTH];
 extern int current_line;
@@ -34,9 +34,10 @@ void compile(char *input_file_name) {
 
     preprocess(tokens);
 
-    parse_topdown(tokens);
+    stmt *ast = parse_topdown(tokens);
     //parse_bottomup(tokens);
 
+    stmt_delete(ast);
     vector_delete(tokens, hlp_delete_token);
     map_delete(words, hlp_delete_token);
     br_close_file(file_reader);
