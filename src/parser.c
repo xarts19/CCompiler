@@ -15,10 +15,18 @@ static expr *Expr_lvl14();
 static expr *Expr_lvl14_(expr *tree_left);
 static expr *Expr_lvl13();
 static expr *Expr_lvl13_(expr *tree_left);
+static expr *Expr_lvl12();
+static expr *Expr_lvl12_(expr *tree_left);
+static expr *Expr_lvl11();
+static expr *Expr_lvl11_(expr *tree_left);
+static expr *Expr_lvl10();
+static expr *Expr_lvl10_(expr *tree_left);
 static expr *Expr_lvl9();
 static expr *Expr_lvl9_(expr *tree_left);
 static expr *Expr_lvl8();
 static expr *Expr_lvl8_(expr *tree_left);
+static expr *Expr_lvl7();
+static expr *Expr_lvl7_(expr *tree_left);
 static expr *Expr_lvl6();
 static expr *Expr_lvl6_(expr *tree_left);
 static expr *Expr_lvl5();
@@ -162,7 +170,7 @@ stmt *Stmt_if() {
     return new_if_stmt(cond, body, alter);
 }
 
-/* STMT -> TYPE [ id ] ARRAY_DECL [ ; ] 
+/* STMT -> TYPE [ id ] ARRAY_DECL [ ; ]
  * STMT -> TYPE [ id ] ( DECLAR, DECLAR, ... ) FNC_TAIL
  */
 stmt *Stmt_declare(bool in_fnc_prototype) {
@@ -253,12 +261,20 @@ expr *Expr_lvl16() {
     return tree2 ? tree2 : tree1;
 }
 
-/* right-associative */
-/* lvl16' -> [= += -= ...] lvl14 lvl16' | e */
+/* right-associative
+ * lvl16' -> [= += -= ...] lvl14 lvl16'
+ *         | e
+ */
 expr *Expr_lvl16_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
-    if (t->id == e_assign) {
+    if (    t->id == e_assign         || t->id == e_plus_assign    ||
+            t->id == e_minus_assign   || t->id == e_mult_assign    ||
+            t->id == e_div_assign     || t->id == e_mod_assign     ||
+            t->id == e_shift_r_assign || t->id == e_shift_l_assign ||
+            t->id == e_and_assign     || t->id == e_or_assign      ||
+            t->id == e_xor_assign   ) {
+
         advance_token();
         expr *tree = new_binary_op_expr(t);
         tree->content.binary.left = tree_left;
@@ -282,8 +298,10 @@ expr *Expr_lvl15() {
     return tree2 ? tree2 : tree1;
 }
 
-/* ternary conditional */
-/* lvl15' -> ? lvl14 : lvl14 | e */
+/* ternary conditional
+ * lvl15' -> ? lvl14 : lvl14
+ *         | e
+ */
 expr *Expr_lvl15_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -306,8 +324,10 @@ expr *Expr_lvl14() {
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl14' -> || lvl13 lvl14' | e */
+/* left-associative
+ * lvl14' -> || lvl13 lvl14'
+ *         | e
+ */
 expr *Expr_lvl14_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -323,15 +343,17 @@ expr *Expr_lvl14_(expr *tree_left) {
         return NULL;
 }
 
-/* lvl13 -> lvl9 lvl13' */
+/* lvl13 -> lvl12 lvl13' */
 expr *Expr_lvl13() {
-    expr *tree1 = Expr_lvl9();
+    expr *tree1 = Expr_lvl12();
     expr *tree2 = Expr_lvl13_(tree1);
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl13' -> && lvl9 lvl13' | e */
+/* left-associative
+ * lvl13' -> && lvl12 lvl13'
+ *         | e
+ */
 expr *Expr_lvl13_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -339,9 +361,87 @@ expr *Expr_lvl13_(expr *tree_left) {
         advance_token();
         expr *tree = new_binary_op_expr(t);
         tree->content.binary.left = tree_left;
-        expr *middle = Expr_lvl9();
+        expr *middle = Expr_lvl12();
         tree->content.binary.right = middle;
         expr *tail = Expr_lvl13_(tree);
+        return tail ? tail : tree;
+    } else
+        return NULL;
+}
+
+/* lvl12 -> lvl11 lvl12' */
+expr *Expr_lvl12() {
+    expr *tree1 = Expr_lvl11();
+    expr *tree2 = Expr_lvl12_(tree1);
+    return tree2 ? tree2 : tree1;
+}
+
+/* left-associative
+ * lvl12' -> '|' lvl11 lvl12'
+ *         | e
+ */
+expr *Expr_lvl12_(expr *tree_left) {
+    token *t = cur_token();
+    if (t->id == e_eof) return NULL;
+    if (t->id == e_or_bitwise) {
+        advance_token();
+        expr *tree = new_binary_op_expr(t);
+        tree->content.binary.left = tree_left;
+        expr *middle = Expr_lvl11();
+        tree->content.binary.right = middle;
+        expr *tail = Expr_lvl12_(tree);
+        return tail ? tail : tree;
+    } else
+        return NULL;
+}
+
+/* lvl11 -> lvl10 lvl11' */
+expr *Expr_lvl11() {
+    expr *tree1 = Expr_lvl10();
+    expr *tree2 = Expr_lvl11_(tree1);
+    return tree2 ? tree2 : tree1;
+}
+
+/* left-associative
+ * lvl11' -> ^ lvl10 lvl11'
+ *         | e
+ */
+expr *Expr_lvl11_(expr *tree_left) {
+    token *t = cur_token();
+    if (t->id == e_eof) return NULL;
+    if (t->id == e_xor_bitwise) {
+        advance_token();
+        expr *tree = new_binary_op_expr(t);
+        tree->content.binary.left = tree_left;
+        expr *middle = Expr_lvl10();
+        tree->content.binary.right = middle;
+        expr *tail = Expr_lvl11_(tree);
+        return tail ? tail : tree;
+    } else
+        return NULL;
+}
+
+/* lvl10 -> lvl9 lvl10' */
+expr *Expr_lvl10() {
+    expr *tree1 = Expr_lvl9();
+    expr *tree2 = Expr_lvl10_(tree1);
+    return tree2 ? tree2 : tree1;
+}
+
+/* left-associative
+ * lvl10' -> & lvl9 lvl10'
+ *         | e
+ */
+expr *Expr_lvl10_(expr *tree_left) {
+    token *t = cur_token();
+    if (t->id == e_eof) return NULL;
+    if (t->id == e_addr /* e_and_bitwise */) {
+        advance_token();
+        expr *tree = new_binary_op_expr(t);
+        tree->content.binary.left = tree_left;
+        expr *middle = Expr_lvl9();
+        tree->content.binary.right = middle;
+        expr *tail = Expr_lvl10_(tree);
         return tail ? tail : tree;
     } else
         return NULL;
@@ -354,8 +454,10 @@ expr *Expr_lvl9() {
     return tree2 ? tree2 : tree1;
 }
 
-/* non-associative */
-/* lvl9' -> [== !=] lvl8 | e */
+/* non-associative
+ * lvl9' -> [== !=] lvl8
+ *        | e
+ */
 expr *Expr_lvl9_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -370,39 +472,72 @@ expr *Expr_lvl9_(expr *tree_left) {
         return NULL;
 }
 
-/* lvl8 -> lvl6 lvl8' */
+/* lvl8 -> lvl7 lvl8' */
 expr *Expr_lvl8() {
-    expr *tree1 = Expr_lvl6();
+    expr *tree1 = Expr_lvl7();
     expr *tree2 = Expr_lvl8_(tree1);
     return tree2 ? tree2 : tree1;
 }
 
-/* non-associative */
-/* lvl8' -> [> < <= >=] lvl6 | e */
+/* non-associative
+ * lvl8' -> [> < <= >=] lvl7
+ *        | e
+ */
 expr *Expr_lvl8_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
-    if (t->id == e_less || t->id == e_more || t->id == e_lesseq || t->id == e_moreeq) {
+    if (    t->id == e_less   || t->id == e_more  ||
+            t->id == e_lesseq || t->id == e_moreeq ) {
+
+        advance_token();
+        expr *tree = new_binary_op_expr(t);
+        tree->content.binary.left = tree_left;
+        expr *middle = Expr_lvl7();
+        tree->content.binary.right = middle;
+        return tree;
+
+    } else
+        return NULL;
+}
+
+/* lvl7 -> lvl6 lvl7' */
+expr *Expr_lvl7() {
+    expr *tree1 = Expr_lvl6();
+    expr *tree2 = Expr_lvl7_(tree1);
+    return tree2 ? tree2 : tree1;
+}
+
+/* left-associative
+ * lvl7' -> [ << >> ] lvl6 lvl7'
+ *        | e
+ */
+expr *Expr_lvl7_(expr *tree_left) {
+    token *t = cur_token();
+    if (t->id == e_eof) return NULL;
+    if (t->id == e_shift_r || t->id == e_shift_l) {
         advance_token();
         expr *tree = new_binary_op_expr(t);
         tree->content.binary.left = tree_left;
         expr *middle = Expr_lvl6();
         tree->content.binary.right = middle;
-        return tree;
+        expr *tail = Expr_lvl7_(tree);
+        return tail ? tail : tree;
     } else
         return NULL;
 }
 
+
 /* lvl6 -> lvl5 lvl6' */
 expr *Expr_lvl6() {
-    expr *tree1, *tree2;
-    tree1 = Expr_lvl5();
-    tree2 = Expr_lvl6_(tree1);
+    expr *tree1 = Expr_lvl5();
+    expr *tree2 = Expr_lvl6_(tree1);
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl6' -> [+ -] lvl5 lvl6' | e */
+/* left-associative
+ * lvl6' -> [+ -] lvl5 lvl6'
+ *        | e
+ */
 expr *Expr_lvl6_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -426,8 +561,10 @@ expr *Expr_lvl5() {
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl5' -> [ * / % ] lvl4 lvl5' | e */
+/* left-associative
+ * lvl5' -> [ * / % ] lvl4 lvl5'
+ *        | e
+ */
 expr *Expr_lvl5_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -451,8 +588,10 @@ expr *Expr_lvl4() {
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl4' -> [.* ->*] lvl3 lvl4' | e */
+/* left-associative
+ * lvl4' -> [.* ->*] lvl3 lvl4'
+ *        | e
+ */
 expr *Expr_lvl4_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -468,14 +607,21 @@ expr *Expr_lvl4_(expr *tree_left) {
         return NULL;
 }
 
-/* right-associative */
-/* prefix unary operators */
-/* lvl3' -> [* + - ! ++ -- &] lvl3' | lvl2 | sizeof ( TYPE ) | sizeof lvl2 */
+/* right-associative
+ * prefix unary operators
+ * lvl3' -> [* + - ~ ! ++ -- &] lvl3'
+ *        | lvl2
+ *        | sizeof ( TYPE )
+ *        | sizeof lvl2
+ */
 expr *Expr_lvl3_() {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
-    if (t->id == e_mult || t->id == e_plus || t->id == e_minus || t->id == e_not ||
-            t->id == e_incr_pre || t->id == e_decr_pre || t->id == e_addr) {
+    if (    t->id == e_mult        || t->id == e_plus     ||
+            t->id == e_minus       || t->id == e_not      ||
+            t->id == e_not_bitwise || t->id == e_incr_pre ||
+            t->id == e_decr_pre    || t->id == e_addr     ) {
+
         advance_token();
         expr *tree = new_unary_op_expr(t);
         expr *middle = Expr_lvl3_();
@@ -483,7 +629,9 @@ expr *Expr_lvl3_() {
             return error("Wrong expression", "");
         tree->content.unary.operand = middle;
         return tree;
+
     } else if (t->id == e_sizeof) {
+
         advance_token();
         expr *tree = new_unary_op_expr(t);
         t = cur_token();
@@ -503,6 +651,7 @@ expr *Expr_lvl3_() {
             tree->content.unary.operand = Expr_lvl2();
         }
         return tree;
+
     } else
         return Expr_lvl2();
 }
@@ -519,8 +668,10 @@ expr *Expr_lvl2() {
     return tree2 ? tree2 : tree1;
 }
 
-/* left-associative */
-/* lvl2' -> [-> ,] lvl0 lvl2' | e */
+/* left-associative
+ * lvl2' -> [-> ,] lvl0 lvl2'
+ *        | e
+ */
 expr *Expr_lvl2_(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -536,9 +687,12 @@ expr *Expr_lvl2_(expr *tree_left) {
         return NULL;
 }
 
-/* left-associative */
-/* postfix unary, function call */
-/* lvl2'unary -> [-- ++ EXPR_LIST] lvl2'unary | [ EXPR ] lvl2'unary | e */
+/* left-associative
+ * postfix unary, function call
+ * lvl2'unary -> [-- ++ EXPR_LIST] lvl2'unary
+ *             | [ EXPR ] lvl2'unary
+ *             | e
+ */
 expr *Expr_lvl2_unary(expr *tree_left) {
     token *t = cur_token();
     if (t->id == e_eof) return NULL;
@@ -565,7 +719,10 @@ expr *Expr_lvl2_unary(expr *tree_left) {
     return tail ? tail : tree;
 }
 
-/* lvl0 -> ( EXPR ) | id | num */
+/* lvl0 -> ( EXPR )
+ *       | id
+ *       | num
+ */
 expr *Expr_lvl0() {
     expr *tree;
     token *t = cur_token();

@@ -8,85 +8,105 @@
 
 /* defined token types */
 typedef enum token_type_enum {
-    e_eof              = 0,
+    e_eof,
 
     /* punctuation */
-    e_open_paren       = 1,       /* ( */
-    e_close_paren      = 2,       /* ) */
-    e_open_curly       = 3,       /* { */
-    e_close_curly      = 4,       /* } */
-    e_open_bracket     = 5,       /* [ */
-    e_close_bracket    = 6,       /* ] */
-    e_semicolon        = 7,       /* ; */
-    e_colon            = 8,       /* : */
-    e_comma            = 9,       /* , */
-    e_question         =10,       /* ? */
+    e_open_paren,     /*  (  */
+    e_close_paren,    /*  )  */
+    e_open_curly,     /*  {  */
+    e_close_curly,    /*  }  */
+    e_open_bracket,   /*  [  */
+    e_close_bracket,  /*  ]  */
+    e_semicolon,      /*  ;  */
+    e_colon,          /*  :  */
+    e_comma,          /*  ,  */
+    e_question,       /*  ?  */
 
     /* keywords */
-    e_while            =20,
-    e_for              =21,
-    e_if               =22,
-    e_then             =23,
-    e_else             =24,
-    e_do               =25,
-    e_switch           =26,
-    e_case             =27,
-    e_typedef          =28,
-    e_struct           =29,
-    e_enum             =30,
-    e_return           =31,
-    e_break            =32,
-    e_continue         =33,
-    e_sizeof           =34,
+    e_while,
+    e_for,
+    e_if,
+    e_then,
+    e_else,
+    e_do,
+    e_switch,
+    e_case,
+    e_typedef,
+    e_struct,
+    e_enum,
+    e_return,
+    e_break,
+    e_continue,
+    e_sizeof,
 
     /* semantic */
-    e_number           =40,     /* 14, 4.6, 3.5E-23, ... */
-    e_literal          =41,     /* "asfaera", 'b', ... */
-    e_identifier       =42,     /* size, ball, ... */
-    e_comment          =43,     /* //this is a comment, ... */
+    e_number,       /* 14, 4.6, 3.5E-23, ... */
+    e_literal,      /* "asfaera", 'b', ... */
+    e_identifier,   /* size, ball, ... */
+    e_comment,      /* //this is a comment, ... */
 
     /* type */
-    e_type             =50,
-    e_signed           =51,
-    e_unsigned         =52,
-    e_char             =53,
-    e_short            =54,
-    e_int              =55,
-    e_long             =56,
-    e_float            =57,
-    e_double           =58,
-    e_void             =59,
+    e_type,
+    e_signed,
+    e_unsigned,
+    e_char,
+    e_short,
+    e_int,
+    e_long,
+    e_float,
+    e_double,
+    e_void,
 
     /* operators */
-    e_assign           =70,
-    e_plus             =71,
-    e_minus            =72,
-    e_mult             =73,
-    e_div              =74,
-    e_mod              =75,
-    e_incr_pre         =76,
-    e_decr_pre         =77,
-    e_not              =78,
-    e_and              =79,
-    e_or               =80,
-    e_eq               =81,
-    e_noteq            =82,
-    e_more             =83,
-    e_less             =84,
-    e_moreeq           =85,
-    e_lesseq           =86,
-    e_dot              =87,
-    e_arrow            =88,
-    e_incr_post        =89,
-    e_decr_post        =90,
-    e_dot_star         =91,
-    e_arrow_star       =92,
-    e_addr             =93,
+    /* assignment */
+    e_assign,
+    e_plus_assign,
+    e_minus_assign,
+    e_mult_assign,
+    e_div_assign,
+    e_mod_assign,
+    e_shift_r_assign,
+    e_shift_l_assign,
+    e_and_assign,
+    e_or_assign,
+    e_xor_assign,
+    /* arithmetic */
+    e_plus,
+    e_minus,
+    e_mult,
+    e_div,
+    e_mod,
+    e_incr_pre,
+    e_decr_pre,
+    e_incr_post,
+    e_decr_post,
+    /* logic */
+    e_not,
+    e_not_bitwise,
+    e_and,
+    e_or,
+    e_or_bitwise,
+    e_xor_bitwise,
+    e_shift_r,
+    e_shift_l,
+    /* comparison */
+    e_eq,
+    e_noteq,
+    e_more,
+    e_less,
+    e_moreeq,
+    e_lesseq,
+    /* pointer operations */
+    e_dot,
+    e_dot_star,
+    e_arrow,
+    e_arrow_star,
+    e_addr,
 
-    e_operator         =101,    /* placeholder */
+    e_operator,    /* placeholder */
 
     /* other */
-    e_preproc_operator =150,    /* # */
+    e_preproc_operator,    /* # */
 } token_type;
 
 typedef struct token {

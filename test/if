@@ -1,0 +1,13 @@
+if (true) 
+    a = 1;
+
+if (1 == 2) {
+    a = 1;
+}
+else {
+    int a;
+    a = 4 == 25;
+    b = 3;
+}
+
+if (a==b) i++; else i--;

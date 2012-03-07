@@ -1,0 +1,4 @@
+int myfnc(char a, float arr[30]);
+int mult(int a, int b) {
+    return a * b;
+}

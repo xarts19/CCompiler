@@ -372,6 +372,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "+=");
+                    token_t = e_plus_assign;
                     break;
                 default:
                     strcpy(buf, "+");
@@ -390,6 +391,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "-=");
+                    token_t = e_minus_assign;
                     break;
                 case '>':
                     forward = br_get_next_char(file_reader);
@@ -414,6 +416,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "*=");
+                    token_t = e_mult_assign;
                     break;
                 default:
                     strcpy(buf, "*");
@@ -427,6 +430,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "/=");
+                    token_t = e_div_assign;
                     break;
                 default:
                     strcpy(buf, "/");
@@ -440,6 +444,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "%=");
+                    token_t = e_mod_assign;
                     break;
                 default:
                     strcpy(buf, "%");
@@ -489,9 +494,11 @@ token *scan_operator(buffered_reader *file_reader) {
                         case '=':
                             br_get_next_char(file_reader);
                             strcpy(buf, ">>=");
+                            token_t = e_shift_r_assign;
                             break;
                         default:
                             strcpy(buf, ">>");
+                            token_t = e_shift_r;
                             break;
                     }
                     break;
@@ -515,9 +522,11 @@ token *scan_operator(buffered_reader *file_reader) {
                         case '=':
                             br_get_next_char(file_reader);
                             strcpy(buf, "<<=");
+                            token_t = e_shift_l_assign;
                             break;
                         default:
                             strcpy(buf, "<<");
+                            token_t = e_shift_l;
                             break;
                     }
                     break;
@@ -538,6 +547,7 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "&=");
+                    token_t = e_and_assign;
                     break;
                 default:
                     strcpy(buf, "&");
@@ -556,9 +566,11 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "|=");
+                    token_t = e_or_assign;
                     break;
                 default:
                     strcpy(buf, "|");
+                    token_t = e_or_bitwise;
                     break;
             }
             break;
@@ -568,15 +580,18 @@ token *scan_operator(buffered_reader *file_reader) {
                 case '=':
                     br_get_next_char(file_reader);
                     strcpy(buf, "^=");
+                    token_t = e_xor_assign;
                     break;
                 default:
                     strcpy(buf, "^");
+                    token_t = e_xor_bitwise;
                     break;
             }
             break;
         case '~':
             br_get_next_char(file_reader);
             strcpy(buf, "~");
+            token_t = e_not_bitwise;
             break;
         case '.':
             forward = br_get_next_char(file_reader);
